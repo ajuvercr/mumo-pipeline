@@ -1,0 +1,100 @@
+@prefix js: <https://w3id.org/conn/js#> .
+@prefix ws: <https://w3id.org/conn/ws#> .
+@prefix : <https://w3id.org/conn#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix rml: <https://w3id.org/conn/rml#> .
+@prefix ql: <http://semweb.mmlab.be/ns/ql#> .
+
+<> owl:imports <https://raw.githubusercontent.com/TREEcg/connector-architecture/main/channel/http.ttl>.
+<> owl:imports <https://raw.githubusercontent.com/TREEcg/connector-architecture/main/channel/file.ttl>.
+<> owl:imports <https://raw.githubusercontent.com/TREEcg/connector-architecture/main/channel/kafka.ttl>.
+
+<> owl:imports <https://raw.githubusercontent.com/ajuvercr/rml-runner/master/ontology.ttl>.
+<> owl:imports <./proc/fetch.ttl>.
+<> owl:imports <./proc/mumo_mapper.ttl>.
+<> owl:imports <./node_modules/sds-processors/configs/yarrrml.ttl>.
+<> owl:imports <./node_modules/sds-processors/configs/sdsify.ttl>.
+<> owl:imports <./node_modules/@treecg/sds-storage-writer-mongo/step.ttl>.
+
+
+<countryChannel> a :HttpReaderChannel;
+  :httpPort 3333.
+
+
+[] a js:JsChannel;
+  :reader <xml/reader>;
+  :writer <xml/writer>.
+
+<xml/reader> a :JsReaderChannel.
+<xml/writer> a :JsWriterChannel.
+
+<yarrml/reader> a :FileReaderChannel;
+  :fileReadFirstContent "true";
+  :fileOnReplace "true";
+  :filePath <./mapping.yml>.
+
+<rml/writer> a :JsWriterChannel.
+<rml/reader> a :JsReaderChannel.
+[] a js:JsChannel; :reader <rml/reader>; :writer <rml/writer>.
+
+
+<json/writer> a :JsWriterChannel.
+<json/reader> a :JsReaderChannel.
+[] a js:JsChannel; :reader <json/reader>; :writer <json/writer>.
+
+
+<ttl/writer> a :JsWriterChannel.
+<ttl/reader> a :JsReaderChannel.
+[] a js:JsChannel; :reader <ttl/reader>; :writer <ttl/writer>.
+
+
+<sds-raw/writer> a :JsWriterChannel.
+<sds-raw/reader> a :JsReaderChannel.
+[] a js:JsChannel; :reader <sds-raw/reader>; :writer <sds-raw/writer>.
+
+
+[] a js:MumoFetch; 
+  js:startUrl "https://mumo.ilabt.imec.be/ingest/?key=mumo-is-cool&index=0";
+  js:savePath <save>;
+  js:intervalMs 1000;
+  js:dataOutput <json/writer>.
+
+[] a js:Y2R;
+  js:input <yarrml/reader>;
+  js:output <rml/writer>.
+
+# [] a js:RmlMapperReader;
+#   js:rml_data_input <json/reader>;
+#   js:rml_mapping_reader <rml/reader>;
+#   js:rml_data_output <ttl/writer>;
+#   rml:referenceFormulation ql:JSONPath;
+#   rml:iterator "$";
+#   rml:jarFile <./rml-mapper-6.x.x.jar>.
+
+[] a js:MumoMapper;
+  js:dataInput <json/reader>;
+  js:dataOutput <ttl/writer>.
+
+[] a js:Sdsify;
+  js:input <ttl/reader>;
+  js:output <sds-raw/writer>;
+  js:objectType <http://def.isotc211.org/iso19156/2011/Observation#OM_Observation>;
+  js:stream <https://w3id.org/sds#Stream>.
+
+
+<metadata/in> a :FileReaderChannel;
+  :fileReadFirstContent "true";
+  :fileOnReplace "true";
+  :filePath <./metadataIn.ttl>.
+
+[] a js:Ingest;
+  js:dataInput <sds-raw/reader>;
+  js:metadataInput <metadata/in>;
+  js:metadataCollection "MUMO_META";
+  js:dataCollection "MUMO_DATA";
+  js:indexCollection "MUMO_INDEX";
+  js:pageSize 150;
+  js:databaseUrl "mongodb://localhost:27017/mumotest".
+  
+

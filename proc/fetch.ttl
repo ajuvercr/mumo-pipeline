@@ -1,0 +1,57 @@
+@prefix js: <https://w3id.org/conn/js#> .
+@prefix fno: <https://w3id.org/function/ontology#> .
+@prefix fnom: <https://w3id.org/function/vocabulary/mapping#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix : <https://w3id.org/conn#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+
+<> owl:imports <https://raw.githubusercontent.com/ajuvercr/js-runner/master/ontology.ttl>. 
+
+
+js:MumoFetch a js:JsProcess;
+  js:file <../lib/fetch.js>;
+  js:function "fetcher";
+  js:location <../>;
+  js:mapping [
+    a fno:Mapping;
+    fno:parameterMapping [
+      a fnom:PositionParameterMapping ;
+      fnom:functionParameter js:startUrl;
+      fnom:implementationParameterPosition "1"^^xsd:int
+    ],[
+      a fnom:PositionParameterMapping ;
+      fnom:functionParameter js:dataOutput;
+      fnom:implementationParameterPosition "0"^^xsd:int
+    ],[
+      a fnom:PositionParameterMapping ;
+      fnom:functionParameter js:savePath;
+      fnom:implementationParameterPosition "2"^^xsd:int
+    ],[
+      a fnom:PositionParameterMapping ;
+      fnom:functionParameter js:intervalMs;
+      fnom:implementationParameterPosition "3"^^xsd:int
+    ]
+  ].
+
+[] a sh:NodeShape;
+  sh:targetClass js:MumoFetch;
+  sh:property [
+    sh:class :WriterChannel;
+    sh:path js:dataOutput;
+    sh:name "Data output channel";
+  ], [
+    sh:dataType xsd:string;
+    sh:path js:startUrl;
+    sh:name "Start consuming Mumo ingested data from this url";
+  ], [
+    sh:dataType xsd:string;
+    sh:path js:savePath;
+    sh:name "Save last consumed URL at this location (optional)";
+  ], [
+    sh:dataType xsd:integer;
+    sh:path js:intervalMs;
+    sh:name "Wait intervalMs millisecond before retrying the current URL.";
+  ].
+
+
