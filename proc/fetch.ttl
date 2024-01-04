@@ -6,8 +6,6 @@
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 
-<> owl:imports <https://raw.githubusercontent.com/ajuvercr/js-runner/master/ontology.ttl>. 
-
 
 js:MumoFetch a js:JsProcess;
   js:file <../lib/fetch.js>;
@@ -17,19 +15,19 @@ js:MumoFetch a js:JsProcess;
     a fno:Mapping;
     fno:parameterMapping [
       a fnom:PositionParameterMapping ;
-      fnom:functionParameter js:startUrl;
-      fnom:implementationParameterPosition "1"^^xsd:int
-    ],[
-      a fnom:PositionParameterMapping ;
-      fnom:functionParameter js:dataOutput;
+      fnom:functionParameter "Data output";
       fnom:implementationParameterPosition "0"^^xsd:int
     ],[
       a fnom:PositionParameterMapping ;
-      fnom:functionParameter js:savePath;
+      fnom:functionParameter "Mumo start url";
+      fnom:implementationParameterPosition "1"^^xsd:int
+    ],[
+      a fnom:PositionParameterMapping ;
+      fnom:functionParameter "Save path";
       fnom:implementationParameterPosition "2"^^xsd:int
     ],[
       a fnom:PositionParameterMapping ;
-      fnom:functionParameter js:intervalMs;
+      fnom:functionParameter "Interval";
       fnom:implementationParameterPosition "3"^^xsd:int
     ]
   ].
@@ -39,19 +37,25 @@ js:MumoFetch a js:JsProcess;
   sh:property [
     sh:class :WriterChannel;
     sh:path js:dataOutput;
-    sh:name "Data output channel";
+    sh:name "Data output";
+    sh:minCount 1;
+    sh:maxCount 1;
   ], [
-    sh:dataType xsd:string;
+    sh:datatype xsd:string;
     sh:path js:startUrl;
-    sh:name "Start consuming Mumo ingested data from this url";
+    sh:name "Mumo start url";
+    sh:minCount 1;
+    sh:maxCount 1;
   ], [
-    sh:dataType xsd:string;
+    sh:datatype xsd:string;
     sh:path js:savePath;
-    sh:name "Save last consumed URL at this location (optional)";
+    sh:name "Save path";
+    sh:maxCount 1;
   ], [
-    sh:dataType xsd:integer;
+    sh:datatype xsd:integer;
     sh:path js:intervalMs;
-    sh:name "Wait intervalMs millisecond before retrying the current URL.";
+    sh:name "Interval";
+    sh:maxCount 1;
   ].
 
 

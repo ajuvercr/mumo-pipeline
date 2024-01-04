@@ -1,77 +1,82 @@
-@prefix js: <https://w3id.org/conn/js#> .
-@prefix ws: <https://w3id.org/conn/ws#> .
-@prefix : <https://w3id.org/conn#> .
-@prefix owl: <http://www.w3.org/2002/07/owl#> .
-@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix rml: <https://w3id.org/conn/rml#> .
-@prefix ql: <http://semweb.mmlab.be/ns/ql#> .
+@prefix rml: <http://w3id.org/rml/>.
+@prefix js: <https://w3id.org/conn/js#>.
+@prefix ws: <https://w3id.org/conn/ws#>.
+@prefix : <https://w3id.org/conn#>.
+@prefix owl: <http://www.w3.org/2002/07/owl#>.
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix rml: <https://w3id.org/conn/rml#>.
+@prefix ql: <http://semweb.mmlab.be/ns/ql#>.
 
-<> owl:imports <https://raw.githubusercontent.com/TREEcg/connector-architecture/main/channel/http.ttl>. <> owl:imports <https://raw.githubusercontent.com/TREEcg/connector-architecture/main/channel/file.ttl>.
+<> owl:imports <https://raw.githubusercontent.com/TREEcg/connector-architecture/main/channel/http.ttl>.
+<> owl:imports <https://raw.githubusercontent.com/TREEcg/connector-architecture/main/channel/file.ttl>.
 <> owl:imports <https://raw.githubusercontent.com/TREEcg/connector-architecture/main/channel/kafka.ttl>.
-
 <> owl:imports <https://raw.githubusercontent.com/ajuvercr/rml-runner/master/ontology.ttl>.
 <> owl:imports <./proc/fetch.ttl>.
 <> owl:imports <./proc/mumo_mapper.ttl>.
 <> owl:imports <./node_modules/sds-processors/configs/2_bucketstep.ttl>.
 <> owl:imports <./node_modules/sds-processors/configs/sdsify.ttl>.
 <> owl:imports <./node_modules/@treecg/sds-storage-writer-mongo/step.ttl>.
-
-
 <json/writer> a :JsWriterChannel.
 <json/reader> a :JsReaderChannel.
-[] a js:JsChannel; :reader <json/reader>; :writer <json/writer>.
-
+[ ] a js:JsChannel;
+  :reader <json/reader>;
+  :writer <json/writer>.
 
 <ttl/writer> a :JsWriterChannel.
 <ttl/reader> a :JsReaderChannel.
-[] a js:JsChannel; :reader <ttl/reader>; :writer <ttl/writer>.
-
+[ ] a js:JsChannel;
+  :reader <ttl/reader>;
+  :writer <ttl/writer>.
 
 <sds-raw/writer> a :JsWriterChannel.
 <sds-raw/reader> a :JsReaderChannel.
-[] a js:JsChannel; :reader <sds-raw/reader>; :writer <sds-raw/writer>.
+[ ] a js:JsChannel;
+  :reader <sds-raw/reader>;
+  :writer <sds-raw/writer>.
 
 <raw/buckets/writer> a :JsWriterChannel.
 <raw/buckets/reader> a :JsReaderChannel.
-[] a js:JsChannel; :reader <raw/buckets/reader>; :writer <raw/buckets/writer>.
+[ ] a js:JsChannel;
+  :reader <raw/buckets/reader>;
+  :writer <raw/buckets/writer>.
 
 <meta/buckets/writer> a :JsWriterChannel.
 <meta/buckets/reader> a :JsReaderChannel.
-[] a js:JsChannel; :reader <meta/buckets/reader>; :writer <meta/buckets/writer>.
+[ ] a js:JsChannel;
+  :reader <meta/buckets/reader>;
+  :writer <meta/buckets/writer>.
 
-
-[] a js:MumoFetch; 
+[ ] a js:MumoFetch;
   js:startUrl "https://mumo.ilabt.imec.be/ingest/?key=mumo-is-cool&index=0";
   js:savePath <save>;
   js:intervalMs 1000;
   js:dataOutput <json/writer>.
 
-[] a js:MumoMapper;
+[ ] a js:MumoMapper;
   js:dataInput <json/reader>;
   js:dataOutput <ttl/writer>.
 
-[] a js:Sdsify;
+[ ] a js:Sdsify;
   js:input <ttl/reader>;
   js:output <sds-raw/writer>;
   js:objectType <http://def.isotc211.org/iso19156/2011/Observation#OM_Observation>;
   js:stream <https://w3id.org/sds#Stream>.
-
 
 <metadata/in> a :FileReaderChannel;
   :fileReadFirstContent "true";
   :fileOnReplace "true";
   :filePath <./metadataIn.ttl>.
 
- [] a js:Bucketize;
-   js:dataInput <sds-raw/reader>;
-   js:metadataInput <metadata/in>;
-   js:dataOutput <raw/buckets/writer>;
-   js:metadataOutput <meta/buckets/writer>;
-   js:bucketizeStrategy <./bucketizeStrategy.ttl>;
-   js:inputStreamId <https://w3id.org/sds#Stream>;
-   js:outputStreamId <http://example.com/test>.
+[ ] a js:Bucketize;
+  js:dataInput <sds-raw/reader>;
+  js:metadataInput <metadata/in>;
+  js:dataOutput <raw/buckets/writer>;
+  js:metadataOutput <meta/buckets/writer>;
+  js:bucketizeStrategy <./bucketizeStrategy.ttl>;
+  js:inputStreamId <https://w3id.org/sds#Stream>;
+  js:outputStreamId <http://example.com/test>.
 
-[] a js:Ingest;
+[ ] a js:Ingest;
   js:dataInput <raw/buckets/reader>;
   js:metadataInput <meta/buckets/reader>;
   js:metadataCollection "MUMO_META";

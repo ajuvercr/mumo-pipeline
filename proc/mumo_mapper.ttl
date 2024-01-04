@@ -6,8 +6,6 @@
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 
-<> owl:imports <https://raw.githubusercontent.com/ajuvercr/js-runner/master/ontology.ttl>. 
-
 
 js:MumoMapper a js:JsProcess;
   js:file <../lib/mapper.js>;
@@ -17,11 +15,11 @@ js:MumoMapper a js:JsProcess;
     a fno:Mapping;
     fno:parameterMapping [
       a fnom:PositionParameterMapping ;
-      fnom:functionParameter js:dataInput;
+      fnom:functionParameter "data input";
       fnom:implementationParameterPosition "0"^^xsd:int
     ],[
       a fnom:PositionParameterMapping ;
-      fnom:functionParameter js:dataOutput;
+      fnom:functionParameter "data output";
       fnom:implementationParameterPosition "1"^^xsd:int
     ]  
   ].
@@ -31,11 +29,11 @@ js:MumoMapper a js:JsProcess;
   sh:property [
     sh:class :WriterChannel;
     sh:path js:dataOutput;
-    sh:name "Data output channel";
+    sh:name "data output";
   ], [
     sh:class :ReaderChannel;
     sh:path js:dataInput;
-    sh:name "Data input channel";
+    sh:name "data input";
   ].
 
 

@@ -1,6 +1,6 @@
-import { Writer } from "@treecg/connector-types";
 import { readFileSync, writeFileSync } from "fs";
 import fetch, { Headers } from "node-fetch";
+import type { Writer } from "@ajuvercr/js-runner";
 
 interface Link {
   target: string;
@@ -31,11 +31,17 @@ function extract_links(headers: Headers): Link[] {
   return out;
 }
 
-async function findNextUrl(url: string, interval_ms: number, maybeLinks?: Link[]): Promise<string> {
-  let links = !!maybeLinks ? maybeLinks : await fetch(url).then(resp => extract_links(resp.headers));
+async function findNextUrl(
+  url: string,
+  interval_ms: number,
+  maybeLinks?: Link[],
+): Promise<string> {
+  let links = !!maybeLinks
+    ? maybeLinks
+    : await fetch(url).then((resp) => extract_links(resp.headers));
 
   while (true) {
-    const next = links.find(x => x.target === "next");
+    const next = links.find((x) => x.target === "next");
     if (next) {
       // Found next url
       const url_url = new URL(url);
@@ -44,16 +50,24 @@ async function findNextUrl(url: string, interval_ms: number, maybeLinks?: Link[]
 
     console.log("waiting");
     // Wait and refetch and look for headers
-    await new Promise(res => setTimeout(res, interval_ms));
+    await new Promise((res) => setTimeout(res, interval_ms));
     const resp = await fetch(url);
     links = extract_links(resp.headers);
   }
 }
 
-async function start(writer: Writer<string>, start_url: string, interval_ms: number, save_path?: string) {
+async function start(
+  writer: Writer<string>,
+  start_url: string,
+  interval_ms: number,
+  save_path?: string,
+) {
+  console.log("Start url", start_url)
+  console.log("Save path", save_path)
   const save = (url: string) => {
-    if (save_path)
+    if (save_path) {
       writeFileSync(save_path, url, { encoding: "utf8" });
+    }
   };
 
   let url = start_url;
@@ -61,8 +75,7 @@ async function start(writer: Writer<string>, start_url: string, interval_ms: num
     try {
       url = readFileSync(save_path, { encoding: "utf8" });
       url = await findNextUrl(url, interval_ms);
-    } catch (ex: any) {
-    }
+    } catch (ex: any) {}
   }
 
   while (true) {
@@ -80,6 +93,11 @@ async function start(writer: Writer<string>, start_url: string, interval_ms: num
   }
 }
 
-export function fetcher(writer: Writer<string>, start_url: string, save_path?: string, interval_ms = 1000) {
+export function fetcher(
+  writer: Writer<string>,
+  start_url: string,
+  save_path?: string,
+  interval_ms = 1000,
+) {
   start(writer, start_url, interval_ms, save_path);
 }

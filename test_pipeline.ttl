@@ -1,0 +1,36 @@
+@prefix rml: <http://w3id.org/rml/>.
+@prefix js: <https://w3id.org/conn/js#>.
+@prefix ws: <https://w3id.org/conn/ws#>.
+@prefix : <https://w3id.org/conn#>.
+@prefix owl: <http://www.w3.org/2002/07/owl#>.
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix rml: <https://w3id.org/conn/rml#>.
+@prefix ql: <http://semweb.mmlab.be/ns/ql#>.
+
+<> owl:imports <./node_modules/@ajuvercr/js-runner/ontology.ttl>.
+<> owl:imports <./node_modules/@ajuvercr/js-runner/channels/file.ttl>.
+<> owl:imports <./proc/fetch.ttl>.
+<> owl:imports <./proc/mumo_mapper.ttl>.
+
+
+<json/writer> a js:JsWriterChannel.
+<json/reader> a js:JsReaderChannel.
+[ ] a js:JsChannel;
+  :reader <json/reader>;
+  :writer <json/writer>.
+
+[ ] a js:MumoFetch;
+  js:startUrl "http://localhost:8080/?index=0";
+  # js:savePath <save>;
+  js:intervalMs 1000;
+  js:dataOutput <json/writer>.
+
+[ ] a js:MumoMapper;
+  js:dataInput <json/reader>;
+  js:dataOutput <output>.
+
+<output> a :FileWriterChannel;
+  :fileReadFirstContent "true";
+  :fileOnReplace "false";
+  :filePath <./output.ttl>.
+
