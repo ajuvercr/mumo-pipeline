@@ -7,41 +7,41 @@
 @prefix rml: <https://w3id.org/conn/rml#>.
 @prefix ql: <http://semweb.mmlab.be/ns/ql#>.
 
-<> owl:imports <https://raw.githubusercontent.com/TREEcg/connector-architecture/main/channel/http.ttl>.
-<> owl:imports <https://raw.githubusercontent.com/TREEcg/connector-architecture/main/channel/file.ttl>.
-<> owl:imports <https://raw.githubusercontent.com/TREEcg/connector-architecture/main/channel/kafka.ttl>.
-<> owl:imports <https://raw.githubusercontent.com/ajuvercr/rml-runner/master/ontology.ttl>.
+<> owl:imports <./node_modules/@ajuvercr/js-runner/ontology.ttl>.
+<> owl:imports <./node_modules/@ajuvercr/js-runner/channels/file.ttl>.
+<> owl:imports <./node_modules/@ajuvercr/js-runner/channels/http.ttl>.
 <> owl:imports <./proc/fetch.ttl>.
 <> owl:imports <./proc/mumo_mapper.ttl>.
-<> owl:imports <./node_modules/sds-processors/configs/2_bucketstep.ttl>.
+<> owl:imports <./node_modules/sds-processors/configs/bucketizer.ttl>.
 <> owl:imports <./node_modules/sds-processors/configs/sdsify.ttl>.
-<> owl:imports <./node_modules/@treecg/sds-storage-writer-mongo/step.ttl>.
-<json/writer> a :JsWriterChannel.
-<json/reader> a :JsReaderChannel.
+<> owl:imports <./node_modules/@treecg/sds-storage-writer-mongo/processor.ttl>.
+
+<json/writer> a js:JsWriterChannel.
+<json/reader> a js:JsReaderChannel.
 [ ] a js:JsChannel;
   :reader <json/reader>;
   :writer <json/writer>.
 
-<ttl/writer> a :JsWriterChannel.
-<ttl/reader> a :JsReaderChannel.
+<ttl/writer> a js:JsWriterChannel.
+<ttl/reader> a js:JsReaderChannel.
 [ ] a js:JsChannel;
   :reader <ttl/reader>;
   :writer <ttl/writer>.
 
-<sds-raw/writer> a :JsWriterChannel.
-<sds-raw/reader> a :JsReaderChannel.
+<sds-raw/writer> a js:JsWriterChannel.
+<sds-raw/reader> a js:JsReaderChannel.
 [ ] a js:JsChannel;
   :reader <sds-raw/reader>;
   :writer <sds-raw/writer>.
 
-<raw/buckets/writer> a :JsWriterChannel.
-<raw/buckets/reader> a :JsReaderChannel.
+<raw/buckets/writer> a js:JsWriterChannel.
+<raw/buckets/reader> a js:JsReaderChannel.
 [ ] a js:JsChannel;
   :reader <raw/buckets/reader>;
   :writer <raw/buckets/writer>.
 
-<meta/buckets/writer> a :JsWriterChannel.
-<meta/buckets/reader> a :JsReaderChannel.
+<meta/buckets/writer> a js:JsWriterChannel.
+<meta/buckets/reader> a js:JsReaderChannel.
 [ ] a js:JsChannel;
   :reader <meta/buckets/reader>;
   :writer <meta/buckets/writer>.
@@ -79,9 +79,11 @@
 [ ] a js:Ingest;
   js:dataInput <raw/buckets/reader>;
   js:metadataInput <meta/buckets/reader>;
-  js:metadataCollection "MUMO_META";
-  js:dataCollection "MUMO_DATA";
-  js:indexCollection "MUMO_INDEX";
-  js:pageSize 150;
-  js:databaseUrl "mongodb://127.0.0.1:27017/mumotest".
+  js:database [
+    js:metadata "MUMO_META";
+    js:data "MUMO_DATA";
+    js:index "MUMO_INDEX";
+    js:url "mongodb://127.0.0.1:27017/mumotest";
+  ];
+  js:pageSize 150.
 

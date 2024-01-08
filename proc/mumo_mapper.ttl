@@ -30,10 +30,14 @@ js:MumoMapper a js:JsProcess;
     sh:class :WriterChannel;
     sh:path js:dataOutput;
     sh:name "data output";
+    sh:maxCount 1;
+    sh:minCount 1;
   ], [
     sh:class :ReaderChannel;
     sh:path js:dataInput;
     sh:name "data input";
+    sh:maxCount 1;
+    sh:minCount 1;
   ].
 
 
