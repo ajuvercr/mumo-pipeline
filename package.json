@@ -19,7 +19,7 @@
   "license": "ISC",
   "dependencies": {
     "@rdfjs/types": "^1.1.0",
-    "@treecg/sds-storage-writer-mongo": "^0.2.2",
+    "@treecg/sds-storage-writer-mongo": "^0.1.0",
     "@treecg/types": "^0.4.5",
     "@types/n3": "^1.10.4",
     "@types/node-fetch": "^2.6.4",

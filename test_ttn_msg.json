@@ -10,7 +10,7 @@
     "dev_addr" : "00BCB929"                  
   },
   "correlation_ids" : [ "as:up:01..." ],
-  "received_at" : "2020-02-12T15:15..."      ,
+  "received_at" : "2024-01-05T15:15..."      ,
   "uplink_message" : {
     "session_key_id": "AXA50...",            
     "f_cnt": 1,                              

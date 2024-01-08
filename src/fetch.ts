@@ -62,8 +62,8 @@ async function start(
   interval_ms: number,
   save_path?: string,
 ) {
-  console.log("Start url", start_url)
-  console.log("Save path", save_path)
+  console.log("Start url", start_url);
+  console.log("Save path", save_path);
   const save = (url: string) => {
     if (save_path) {
       writeFileSync(save_path, url, { encoding: "utf8" });
@@ -78,19 +78,21 @@ async function start(
     } catch (ex: any) {}
   }
 
-  while (true) {
-    console.log("fetching url", url);
-    const resp = await fetch(url);
-    let links = extract_links(resp.headers);
+  return async () => {
+    while (true) {
+      console.log("fetching url", url);
+      const resp = await fetch(url);
+      let links = extract_links(resp.headers);
 
-    const text = await resp.text();
-    console.log("got text!", text.length);
+      const text = await resp.text();
+      console.log("got text!", text.length);
 
-    await writer.push(text);
-    save(url);
+      await writer.push(text);
+      save(url);
 
-    url = await findNextUrl(url, interval_ms, links);
-  }
+      url = await findNextUrl(url, interval_ms, links);
+    }
+  };
 }
 
 export function fetcher(
@@ -99,5 +101,5 @@ export function fetcher(
   save_path?: string,
   interval_ms = 1000,
 ) {
-  start(writer, start_url, interval_ms, save_path);
+  return start(writer, start_url, interval_ms, save_path);
 }

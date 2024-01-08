@@ -14,7 +14,7 @@
 <> owl:imports <./proc/mumo_mapper.ttl>.
 <> owl:imports <./node_modules/sds-processors/configs/bucketizer.ttl>.
 <> owl:imports <./node_modules/sds-processors/configs/sdsify.ttl>.
-<> owl:imports <./node_modules/@treecg/sds-storage-writer-mongo/processor.ttl>.
+<> owl:imports <./node_modules/@treecg/sds-storage-writer-mongo/step.ttl>.
 
 <json/writer> a js:JsWriterChannel.
 <json/reader> a js:JsReaderChannel.
