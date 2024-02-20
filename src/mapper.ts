@@ -11,16 +11,22 @@ const qudt = createTermNamespace(
   "numericValue",
   "QuantityValue",
 );
+
 const qudtUnit = createTermNamespace(
   "http://qudt.org/1.1/vocab/unit#",
   "DegreeCelsius",
+  "RelHumidity",
+  "Pressure",
+  "Battery",
 );
+
 const sosa = createTermNamespace(
   "https://www.w3.org/ns/sosa/",
   "Sensor",
   "observes",
   "madeBySensor",
 );
+
 const mumo = createTermNamespace("http://mumo.be/ns/");
 const mumoData = createTermNamespace("http://mumo.be/data/");
 const mumoMeting = createTermNamespace("http://mumo.be/data/");
@@ -30,6 +36,7 @@ const isotc = createTermNamespace(
   "OM_Observation.result",
   "OM_Observation",
 );
+
 const oslo = createTermNamespace(
   "https://data.vlaanderen.be/ns/observaties-en-metingen#",
 );
@@ -88,6 +95,9 @@ type Model = {
 
 const typeDict: { [key: string]: NamedNode } = {
   temperature: qudtUnit.DegreeCelsius,
+  battery: qudtUnit.Battery,
+  humidity: qudtUnit.RelHumidity,
+  pressure: qudtUnit.Pressure,
 };
 
 function observation(data: Model, key: string) {
@@ -137,7 +147,7 @@ function do_transform(input: string): string[] {
   const data: Model = JSON.parse(input);
   const strings: string[] = [];
 
-  const types = ["temperature"];
+  const types = Object.keys(typeDict);
   for (let ty of types) {
     try {
       if (data.uplink_message.decoded_payload[ty]) {
