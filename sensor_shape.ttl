@@ -1,0 +1,81 @@
+@prefix cidoc: <http://www.cidoc-crm.org/cidoc-crm/>.
+@prefix sosa: <http://www.w3.org/ns/sosa/>.
+@prefix dcterms: <http://purl.org/dc/terms/>.
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
+@prefix sh: <http://www.w3.org/ns/shacl#>.
+
+[ ] a sh:NodeShape;
+  sh:targetClass <SensorShape>;
+  sh:property [
+    sh:name "id";
+    sh:path ( );
+    sh:datatype xsd:iri;
+    sh:minCount 1;
+    sh:maxCount 1;
+  ], [
+    sh:name "name";
+    sh:path dcterms:title;
+    sh:datatype xsd:string;
+    sh:maxCount 1;
+  ], [
+    sh:name "observes";
+    sh:path sosa:observes;
+    sh:datatype xsd:string;
+    sh:maxCount 1;
+  ].
+
+[ ] a sh:NodeShape;
+  sh:targetClass <LocationShape>;
+  sh:property [
+    sh:name "name";
+    sh:path dcterms:title;
+    sh:datatype xsd:string;
+    sh:maxCount 1;
+  ], [
+    sh:name "address";
+    sh:path <http://www.loc.gov/mods/rdf/v1#locationOfResource>;
+    sh:datatype xsd:string;
+    sh:maxCount 1;
+  ], [
+    sh:name "isPartOf";
+    sh:path dcterms:isPartOf;
+    sh:class <LocationShape>;
+    sh:maxCount 1;
+  ], [
+    sh:name "postal";
+    sh:path (
+      [ sh:zeroOrMorePath dcterms:isPartOf ]
+      <http://www.loc.gov/mods/rdf/v1#locationOfResource>
+    );
+    sh:maxCount 1;
+    sh:datatype xsd:string;
+  ].
+
+[ ] a sh:NodeShape;
+  sh:targetClass <NodeShape>;
+  sh:property [
+    sh:name "hosts";
+    sh:path sosa:hosts;
+    sh:class <SensorShape>;
+  ], [
+    sh:name "name";
+    sh:path dcterms:title;
+    sh:datatype xsd:string;
+    sh:maxCount 1;
+  ], [
+    sh:name "id";
+    sh:path ( );
+    sh:datatype xsd:iri;
+    sh:maxCount 1;
+  ], [
+    sh:name "location";
+    sh:path cidoc:P55_has_current_location;
+    sh:class <LocationShape>;
+    sh:maxCount 1;
+  ], [
+    sh:name "related";
+    sh:path <http://www.loc.gov/mods/rdf/v1#relatedItem>;
+    sh:datatype xsd:string;
+    sh:maxCount 1;
+  ].
+

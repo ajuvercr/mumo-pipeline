@@ -4,9 +4,23 @@
     "outDir": "lib/",
     "target": "ESNext",
     "module": "ESNext",
-    "moduleResolution": "node"
+    "moduleResolution": "node",
+    "typeRoots": [
+      "node_modules/@types",
+      "src/types"
+    ],
+    "paths": {
+      "jsonld": [
+        "./src/types/jsonld"
+      ]
+    }
   },
   "allowJs": true,
-  "include": ["src/**/*"],
-  "exclude": ["node_modules/**/*"]
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules/**/*",
+    "src/types/**"
+  ]
 }
