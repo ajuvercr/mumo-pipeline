@@ -2,6 +2,7 @@ import { readFileSync, writeFileSync } from "fs";
 import fetch, { Headers } from "node-fetch";
 import type { Writer } from "@ajuvercr/js-runner";
 
+
 interface Link {
   target: string;
   url: string;
@@ -36,6 +37,7 @@ async function findNextUrl(
   interval_ms: number,
   maybeLinks?: Link[],
 ): Promise<string> {
+  const startingUrl = new URL(url);
   let links = !!maybeLinks
     ? maybeLinks
     : await fetch(url).then((resp) => extract_links(resp.headers));
@@ -44,8 +46,11 @@ async function findNextUrl(
     const next = links.find((x) => x.target === "next");
     if (next) {
       // Found next url
-      const url_url = new URL(url);
-      return `${url_url.protocol}//${url_url.host}${next.url}`;
+      const url_url = new URL(
+        next.url,
+        `${startingUrl.protocol}//${startingUrl.host}`,
+      );
+      return url_url.href;
     }
 
     console.log("waiting");
@@ -79,6 +84,7 @@ async function start(
   }
 
   return async () => {
+    console.log("Starting for real")
     while (true) {
       console.log("fetching url", url);
       const resp = await fetch(url);
@@ -88,6 +94,7 @@ async function start(
       console.log("got text!", text.length);
 
       await writer.push(text);
+      // await new Promise(res => setTimeout(res, 1000))
       save(url);
 
       url = await findNextUrl(url, interval_ms, links);
@@ -101,5 +108,6 @@ export function fetcher(
   save_path?: string,
   interval_ms = 1000,
 ) {
+  console.log("Starting fetcher");
   return start(writer, start_url, interval_ms, save_path);
 }

@@ -1,45 +1,14 @@
 import { NamedNode, Quad } from "@rdfjs/types";
 import type { Stream, Writer } from "@ajuvercr/js-runner";
-import { createTermNamespace, RDF, XSD } from "@treecg/types";
+import { RDF, XSD } from "@treecg/types";
 import * as N3 from "n3";
+import { extract, get_shapes, Node, Sensor } from "./sensors";
+import { readFile } from "fs/promises";
+import { RdfStore } from "rdf-stores";
+import { isotc, mumoData, qudt, qudtUnit, sosa } from "./ontologies";
 
+type Nodes = { [related: string]: { node: Node; quads: Quad[] } };
 const { quad, literal, blankNode } = N3.DataFactory;
-
-const qudt = createTermNamespace(
-  "http://qudt.org/1.1/schema/qudt#",
-  "unit",
-  "numericValue",
-  "QuantityValue",
-);
-
-const qudtUnit = createTermNamespace(
-  "http://qudt.org/1.1/vocab/unit#",
-  "DegreeCelsius",
-  "RelHumidity",
-  "Pressure",
-  "Battery",
-);
-
-const sosa = createTermNamespace(
-  "https://www.w3.org/ns/sosa/",
-  "Sensor",
-  "observes",
-  "madeBySensor",
-);
-
-const mumo = createTermNamespace("http://mumo.be/ns/");
-const mumoData = createTermNamespace("http://mumo.be/data/");
-const mumoMeting = createTermNamespace("http://mumo.be/data/");
-const isotc = createTermNamespace(
-  "http://def.isotc211.org/iso19156/2011/Observation#",
-  "OM_Observation.resultTime",
-  "OM_Observation.result",
-  "OM_Observation",
-);
-
-const oslo = createTermNamespace(
-  "https://data.vlaanderen.be/ns/observaties-en-metingen#",
-);
 
 type Model = {
   end_device_ids: {
@@ -100,9 +69,11 @@ const typeDict: { [key: string]: NamedNode } = {
   pressure: qudtUnit.Pressure,
 };
 
-function observation(data: Model, key: string) {
+function observation(data: Model, key: string, sensor?: Sensor) {
   const time = data.uplink_message.rx_metadata[0].time;
+
   const subj = mumoData.custom(`${time}/${key}`);
+
   const device_id = data.end_device_ids.device_id;
   const value = data.uplink_message.decoded_payload[key];
 
@@ -126,9 +97,21 @@ function observation(data: Model, key: string) {
     quad(
       subj,
       sosa.madeBySensor,
-      mumoData.custom(`sensor/${key}/${device_id}`),
+      sensor
+        ? <N3.Quad_Object>sensor.id
+        : mumoData.custom(`sensor/${device_id}/${key}`),
     ),
   );
+
+  if (!sensor) {
+    quads.push(
+      quad(
+        mumoData.custom(`sensor/${device_id}`),
+        sosa.hosts,
+        mumoData.custom(`sensor/${device_id}/${key}`),
+      ),
+    );
+  }
 
   quads.push(quad(resultId, RDF.terms.type, qudt.QuantityValue));
   quads.push(quad(resultId, qudt.unit, typeDict[key]));
@@ -143,18 +126,27 @@ function observation(data: Model, key: string) {
   return quads;
 }
 
-function do_transform(input: string): string[] {
+function do_transform(input: string, nodes: Nodes): string[] {
   const data: Model = JSON.parse(input);
   const strings: string[] = [];
 
-  const types = Object.keys(typeDict);
+  const node = nodes[data.end_device_ids.device_id];
+  const types = node
+    ? node.node.hosts.map((x) => x.observes)
+    : Object.keys(typeDict);
+
   for (let ty of types) {
     try {
       if (data.uplink_message.decoded_payload[ty]) {
-        const obj = observation(data, ty);
+        const sensor = node?.node.hosts.find((x) => x.observes === ty);
+        const obj = observation(data, ty, sensor);
         if (obj) {
+          if (node) {
+            obj.push(...node.quads);
+          }
           const writer = new N3.Writer();
-          strings.push(writer.quadsToString(obj));
+          const output = writer.quadsToString(obj);
+          strings.push(output);
         }
       }
     } catch (ex: any) {}
@@ -163,10 +155,38 @@ function do_transform(input: string): string[] {
   return strings;
 }
 
-export function transform(reader: Stream<string>, writer: Writer<string>) {
+async function find_nodes(nodes: Nodes) {
+  const shape = await readFile("./shape.ttl", { encoding: "utf8" });
+  const shapeTriples = new N3.Parser().parse(shape);
+  const shapeStore = RdfStore.createDefault();
+  shapeTriples.forEach((x) => shapeStore.addQuad(x));
+
+  const shapes = get_shapes();
+
+  const resp = await fetch(
+    "https://heron.libis.be/momu-test/api/items?property[0][joiner]=and&property[0][property][]=820&property[0][type]=in&property[0][text]=mumo",
+  );
+  const data = await resp.text();
+  await extract<Node>(
+    data,
+    shapeStore,
+    shapes.lenses["NodeShape"],
+    (node, quads) => {
+      nodes[node.related] = { node, quads };
+    },
+  );
+}
+
+export async function transform(
+  reader: Stream<string>,
+  writer: Writer<string>,
+) {
+  const nodes: Nodes = {};
+  await find_nodes(nodes);
+
   reader.data(async (input) => {
     try {
-      const objects = do_transform(input);
+      const objects = do_transform(input, nodes);
       for (let object of objects) {
         await writer.push(object);
       }

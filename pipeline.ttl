@@ -1,3 +1,9 @@
+@prefix ex: <http://example.org/>.
+@prefix cidoc: <http://www.cidoc-crm.org/cidoc-crm/>.
+@prefix sosa: <http://www.w3.org/ns/sosa/>.
+@prefix dcterms: <http://purl.org/dc/terms/>.
+@prefix sh: <http://www.w3.org/ns/shacl#>.
+@prefix tree: <https://w3id.org/tree#>.
 @prefix rml: <http://w3id.org/rml/>.
 @prefix js: <https://w3id.org/conn/js#>.
 @prefix ws: <https://w3id.org/conn/ws#>.
@@ -14,35 +20,35 @@
 <> owl:imports <./proc/mumo_mapper.ttl>.
 <> owl:imports <./node_modules/sds-processors/configs/bucketizer.ttl>.
 <> owl:imports <./node_modules/sds-processors/configs/sdsify.ttl>.
-<> owl:imports <./node_modules/@treecg/sds-storage-writer-mongo/step.ttl>.
-
+<> owl:imports <./node_modules/@treecg/sds-storage-writer-mongo/processor.ttl>.
+<> owl:imports <./shape.ttl>.
 <json/writer> a js:JsWriterChannel.
 <json/reader> a js:JsReaderChannel.
-[ ] a js:JsChannel;
+[ ] a :Channel;
   :reader <json/reader>;
   :writer <json/writer>.
 
 <ttl/writer> a js:JsWriterChannel.
 <ttl/reader> a js:JsReaderChannel.
-[ ] a js:JsChannel;
+[ ] a :Channel;
   :reader <ttl/reader>;
   :writer <ttl/writer>.
 
 <sds-raw/writer> a js:JsWriterChannel.
 <sds-raw/reader> a js:JsReaderChannel.
-[ ] a js:JsChannel;
+[ ] a :Channel;
   :reader <sds-raw/reader>;
   :writer <sds-raw/writer>.
 
 <raw/buckets/writer> a js:JsWriterChannel.
 <raw/buckets/reader> a js:JsReaderChannel.
-[ ] a js:JsChannel;
+[ ] a :Channel;
   :reader <raw/buckets/reader>;
   :writer <raw/buckets/writer>.
 
 <meta/buckets/writer> a js:JsWriterChannel.
 <meta/buckets/reader> a js:JsReaderChannel.
-[ ] a js:JsChannel;
+[ ] a :Channel;
   :reader <meta/buckets/reader>;
   :writer <meta/buckets/writer>.
 
@@ -60,7 +66,9 @@
   js:input <ttl/reader>;
   js:output <sds-raw/writer>;
   js:objectType <http://def.isotc211.org/iso19156/2011/Observation#OM_Observation>;
-  js:stream <https://w3id.org/sds#Stream>.
+  js:stream <https://w3id.org/sds#Stream>;
+  js:type <http://def.isotc211.org/iso19156/2011/Observation#OM_Observation>;
+  js:shape ex:Measurement.
 
 <metadata/in> a :FileReaderChannel;
   :fileReadFirstContent "true";
@@ -68,22 +76,43 @@
   :filePath <./metadataIn.ttl>.
 
 [ ] a js:Bucketize;
-  js:dataInput <sds-raw/reader>;
-  js:metadataInput <metadata/in>;
-  js:dataOutput <raw/buckets/writer>;
-  js:metadataOutput <meta/buckets/writer>;
-  js:bucketizeStrategy <./bucketizeStrategy.ttl>;
-  js:inputStreamId <https://w3id.org/sds#Stream>;
+  js:channels [
+    js:dataInput <sds-raw/reader>;
+    js:metadataInput <metadata/in>;
+    js:dataOutput <raw/buckets/writer>;
+    js:metadataOutput <meta/buckets/writer>;
+  ];
+  js:bucketizeStrategy ( [
+    a tree:SubjectFragmentation;
+    tree:fragmentationPath (
+      sosa:madeBySensor
+      [ sh:inversePath sosa:hosts ]
+      cidoc:P55_has_current_location
+      [ sh:zeroOrMorePath dcterms:isPartOf ]
+    );
+    tree:fragmentationDefaultName "unlocated";
+    tree:fragmentationPathName dcterms:title;
+  ] [
+    a tree:SubjectFragmentation;
+    tree:fragmentationPath ( sosa:madeBySensor [ sh:inversePath sosa:hosts ] );
+    tree:fragmentationDefaultName "unknown";
+    tree:fragmentationPathName dcterms:title;
+  ] [
+    a tree:SubjectFragmentation;
+    tree:fragmentationPath ( sosa:madeBySensor );
+    tree:fragmentationDefaultName "unknown";
+    tree:fragmentationPathName sosa:observes;
+  ] [
+    a tree:PageFragmentation;
+    tree:pageSize 200;
+  ] );
+  js:savePath <./buckets_save.json>;
   js:outputStreamId <http://example.com/test>.
 
-[ ] a js:Ingest;
+[ ] a js:SDSIngest;
+  # js:dataInput <sds-raw/reader>;
+  # js:metadataInput <metadata/in>;
   js:dataInput <raw/buckets/reader>;
   js:metadataInput <meta/buckets/reader>;
-  js:database [
-    js:metadata "MUMO_META";
-    js:data "MUMO_DATA";
-    js:index "MUMO_INDEX";
-    js:url "mongodb://127.0.0.1:27017/mumotest";
-  ];
-  js:pageSize 150.
+  js:database "mongodb://127.0.0.1:27017/mumotest".
 
