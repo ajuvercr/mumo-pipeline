@@ -1,30 +1,29 @@
-@prefix js: <https://w3id.org/conn/js#> .
-@prefix fno: <https://w3id.org/function/ontology#> .
-@prefix fnom: <https://w3id.org/function/vocabulary/mapping#> .
-@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
-@prefix : <https://w3id.org/conn#> .
-@prefix sh: <http://www.w3.org/ns/shacl#> .
-@prefix owl: <http://www.w3.org/2002/07/owl#> .
-
+@prefix js: <https://w3id.org/conn/js#>.
+@prefix fno: <https://w3id.org/function/ontology#>.
+@prefix fnom: <https://w3id.org/function/vocabulary/mapping#>.
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
+@prefix : <https://w3id.org/conn#>.
+@prefix sh: <http://www.w3.org/ns/shacl#>.
+@prefix owl: <http://www.w3.org/2002/07/owl#>.
 
 js:MumoMapper a js:JsProcess;
-  js:file <../lib/mapper.js>;
+  js:file <../lib/src/mapper.js>;
   js:function "transform";
   js:location <../>;
   js:mapping [
     a fno:Mapping;
     fno:parameterMapping [
-      a fnom:PositionParameterMapping ;
+      a fnom:PositionParameterMapping;
       fnom:functionParameter "data input";
-      fnom:implementationParameterPosition "0"^^xsd:int
-    ],[
-      a fnom:PositionParameterMapping ;
+      fnom:implementationParameterPosition "0"^^xsd:int;
+    ], [
+      a fnom:PositionParameterMapping;
       fnom:functionParameter "data output";
-      fnom:implementationParameterPosition "1"^^xsd:int
-    ]  
+      fnom:implementationParameterPosition "1"^^xsd:int;
+    ];
   ].
 
-[] a sh:NodeShape;
+[ ] a sh:NodeShape;
   sh:targetClass js:MumoMapper;
   sh:property [
     sh:class :WriterChannel;
@@ -39,5 +38,4 @@ js:MumoMapper a js:JsProcess;
     sh:maxCount 1;
     sh:minCount 1;
   ].
-
 

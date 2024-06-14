@@ -1,6 +1,7 @@
 {
   "extends": "@tsconfig/node16/tsconfig.json",
   "compilerOptions": {
+    "declaration": true,
     "outDir": "lib/",
     "target": "ESNext",
     "module": "ESNext",
@@ -17,8 +18,13 @@
   },
   "allowJs": true,
   "include": [
-    "src/**/*"
+    "src/**/*",
+    "index.ts"
   ],
+  "tsc-alias": {
+    "resolveFullPaths": true,
+    "verbose": false
+  },
   "exclude": [
     "node_modules/**/*",
     "src/types/**"

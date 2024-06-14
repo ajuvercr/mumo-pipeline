@@ -1,0 +1,36 @@
+@prefix omeka-s: <http://omeka.org/s/vocabs/o#>.
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
+@prefix dc: <http://purl.org/dc/terms/>.
+@prefix cidoc-crm: <http://www.cidoc-crm.org/cidoc-crm/>.
+@prefix gov: <http://www.loc.gov/mods/rdf/v1#>.
+@prefix sosa: <http://www.w3.org/ns/sosa/>.
+
+<http://mumo.be/data/unknown/node> a sosa:Platform;
+  dc:description "Unconfigured node";
+  dc:title "UNCONFIGURED";
+  cidoc-crm:P55_has_current_location <http://mumo.be/data/unknown/location>;
+  gov:relatedItem "SomeID";
+  sosa:hosts <http://mumo.be/data/unknown/sensor/temperature>,
+    <http://mumo.be/data/unknown/sensor/pressure>,
+    <http://mumo.be/data/unknown/sensor/battery>,
+    <http://mumo.be/data/unknown/sensor/humidity>.
+
+<http://mumo.be/data/unknown/sensor/temperature> a sosa:Sensor;
+  dc:title "UNKNOWN - Temperature";
+  sosa:observes "temperature".
+
+<http://mumo.be/data/unknown/sensor/humidity> a sosa:Sensor;
+  dc:title "UNKNOWN - Humidity";
+  sosa:observes "humidity".
+
+<http://mumo.be/data/unknown/sensor/pressure> a sosa:Sensor;
+  dc:title "UNKNOWN - Pressure";
+  sosa:observes "pressure".
+
+<http://mumo.be/data/unknown/sensor/battery> a sosa:Sensor;
+  dc:title "UNKNOWN - Battery";
+  sosa:observes "battery".
+
+<http://mumo.be/data/unknown/location> a dc:Location;
+  dc:title "UNKNOWN - Location".
+

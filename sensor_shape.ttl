@@ -32,6 +32,11 @@
     sh:datatype xsd:string;
     sh:maxCount 1;
   ], [
+    sh:name "id";
+    sh:path ();
+    sh:datatype xsd:iri;
+    sh:maxCount 1;
+  ], [
     sh:name "address";
     sh:path <http://www.loc.gov/mods/rdf/v1#locationOfResource>;
     sh:datatype xsd:string;

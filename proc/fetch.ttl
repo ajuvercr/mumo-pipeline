@@ -8,7 +8,7 @@
 
 
 js:MumoFetch a js:JsProcess;
-  js:file <../lib/fetch.js>;
+  js:file <../lib/src/fetch.js>;
   js:function "fetcher";
   js:location <../>;
   js:mapping [
@@ -31,6 +31,7 @@ js:MumoFetch a js:JsProcess;
       fnom:implementationParameterPosition "3"^^xsd:int
     ]
   ].
+
 
 [] a sh:NodeShape;
   sh:targetClass js:MumoFetch;

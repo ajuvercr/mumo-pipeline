@@ -2,7 +2,6 @@ import { readFileSync, writeFileSync } from "fs";
 import fetch, { Headers } from "node-fetch";
 import type { Writer } from "@ajuvercr/js-runner";
 
-
 interface Link {
   target: string;
   url: string;
@@ -35,8 +34,9 @@ function extract_links(headers: Headers): Link[] {
 async function findNextUrl(
   url: string,
   interval_ms: number,
+  stop: boolean,
   maybeLinks?: Link[],
-): Promise<string> {
+): Promise<string | undefined> {
   const startingUrl = new URL(url);
   let links = !!maybeLinks
     ? maybeLinks
@@ -54,6 +54,8 @@ async function findNextUrl(
     }
 
     console.log("waiting");
+
+    if (stop) break;
     // Wait and refetch and look for headers
     await new Promise((res) => setTimeout(res, interval_ms));
     const resp = await fetch(url);
@@ -66,6 +68,7 @@ async function start(
   start_url: string,
   interval_ms: number,
   save_path?: string,
+  stop = false,
 ) {
   console.log("Start url", start_url);
   console.log("Save path", save_path);
@@ -75,17 +78,17 @@ async function start(
     }
   };
 
-  let url = start_url;
+  let url: string | undefined = start_url;
   if (save_path) {
     try {
       url = readFileSync(save_path, { encoding: "utf8" });
-      url = await findNextUrl(url, interval_ms);
-    } catch (ex: any) {}
+      url = await findNextUrl(url, interval_ms, stop);
+    } catch (ex: any) { }
   }
 
   return async () => {
-    console.log("Starting for real")
-    while (true) {
+    console.log("Starting for real");
+    while (url) {
       console.log("fetching url", url);
       const resp = await fetch(url);
       let links = extract_links(resp.headers);
@@ -97,8 +100,10 @@ async function start(
       // await new Promise(res => setTimeout(res, 1000))
       save(url);
 
-      url = await findNextUrl(url, interval_ms, links);
+      url = await findNextUrl(url, interval_ms, stop, links);
     }
+
+    await writer.end()
   };
 }
 
@@ -107,7 +112,8 @@ export function fetcher(
   start_url: string,
   save_path?: string,
   interval_ms = 1000,
+  stop = false,
 ) {
   console.log("Starting fetcher");
-  return start(writer, start_url, interval_ms, save_path);
+  return start(writer, start_url, interval_ms, save_path, stop);
 }
