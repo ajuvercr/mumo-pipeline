@@ -3,13 +3,13 @@ import type { Stream, Writer } from "@ajuvercr/js-runner";
 import { RDF, XSD } from "@treecg/types";
 import * as N3 from "n3";
 import { extract, get_shapes, Node, Sensor } from "./sensors";
-import { readFile } from "fs/promises";
 import { RdfStore } from "rdf-stores";
 import { isotc, mumoData, qudt, qudtUnit, sosa } from "./ontologies";
+import path from "path";
+import { readFile } from "fs/promises";
 
-type Nodes = { [related: string]: { node: Node; quads: Quad[] } };
+export type Nodes = { [related: string]: { node: Node; quads: Quad[] } };
 const { quad, literal, blankNode } = N3.DataFactory;
-
 type Model = {
   end_device_ids: {
     device_id: string;
@@ -60,6 +60,15 @@ type Model = {
       cluster_address: string;
     };
   };
+};
+
+const alias: { [key: string]: string } = {
+  Temperatuur: "temperature",
+  Luchtvochtigheid: "humidity",
+  temperature: "temperature",
+  humidity: "humidity",
+  battery: "battery",
+  pressure: "pressure",
 };
 
 const typeDict: { [key: string]: NamedNode } = {
@@ -130,15 +139,26 @@ function do_transform(input: string, nodes: Nodes): string[] {
   const data: Model = JSON.parse(input);
   const strings: string[] = [];
 
-  const node = nodes[data.end_device_ids.device_id];
+  const node = nodes[data.end_device_ids.dev_eui] || nodes["default"];
+
+  console.log("Found nodes", Object.keys(nodes));
+  console.log("Current data", data.end_device_ids);
+
   const types = node
     ? node.node.hosts.map((x) => x.observes)
     : Object.keys(typeDict);
 
-  for (let ty of types) {
+  console.log(
+    "Found node",
+    !!node,
+    node?.node.hosts.map((x) => x.observes),
+  );
+
+  for (let thisTy of types) {
+    const ty = alias[thisTy];
     try {
       if (data.uplink_message.decoded_payload[ty]) {
-        const sensor = node?.node.hosts.find((x) => x.observes === ty);
+        const sensor = node?.node.hosts.find((x) => alias[x.observes] === ty);
         const obj = observation(data, ty, sensor);
         if (obj) {
           if (node) {
@@ -149,24 +169,75 @@ function do_transform(input: string, nodes: Nodes): string[] {
           strings.push(output);
         }
       }
-    } catch (ex: any) {}
+    } catch (ex: any) { }
   }
 
   return strings;
 }
 
-async function find_nodes(nodes: Nodes) {
-  const shape = await readFile("./shape.ttl", { encoding: "utf8" });
+export function cached(fetch_f: typeof fetch): typeof fetch {
+  const cache: {
+    [id: string]: {
+      status: number;
+      text: string;
+      headers: Headers;
+    };
+  } = {};
+  return async (a, b) => {
+    const c = cache[a.toString()];
+    if (c) {
+      console.log("Cached!");
+      return new Response(c.text, {
+        headers: c.headers,
+        status: c.status,
+      });
+    }
+
+    console.log("Fetching ", a.toString());
+    const resp = await fetch_f(a, b);
+    const text = resp.ok ? await resp.text() : "";
+    const nc = {
+      text,
+      headers: resp.headers,
+      status: resp.status,
+    };
+    cache[a.toString()] = nc;
+    return new Response(nc.text, {
+      headers: nc.headers,
+      status: nc.status,
+    });
+  };
+}
+
+const thisFetch = cached(fetch);
+
+export async function find_nodes(nodes: Nodes, from_cache = false) {
+  const shape = await readFile(path.join(__dirname, "../shape.ttl"), {
+    encoding: "utf8",
+  });
   const shapeTriples = new N3.Parser().parse(shape);
   const shapeStore = RdfStore.createDefault();
   shapeTriples.forEach((x) => shapeStore.addQuad(x));
 
   const shapes = get_shapes();
 
-  const resp = await fetch(
-    "https://heron.libis.be/momu-test/api/items?property[0][joiner]=and&property[0][property][]=820&property[0][type]=in&property[0][text]=mumo",
+  const defaultQuads = new N3.Parser().parse(
+    await readFile(path.join(__dirname, "../default_node.ttl"), {
+      encoding: "utf8",
+    }),
+  );
+  const defaultNode = shapes.lenses["NodeShape"].execute({
+    quads: defaultQuads,
+    id: new N3.NamedNode("http://mumo.be/data/unknown/node"),
+  });
+
+  nodes["default"] = { node: defaultNode, quads: defaultQuads };
+
+  const resp = await thisFetch(
+    "https://heron.libis.be/momu/api/items?resource_template_id[]=21&resource_template_id[]=9",
   );
   const data = await resp.text();
+
   await extract<Node>(
     data,
     shapeStore,
@@ -174,6 +245,7 @@ async function find_nodes(nodes: Nodes) {
     (node, quads) => {
       nodes[node.related] = { node, quads };
     },
+    from_cache,
   );
 }
 
@@ -183,6 +255,8 @@ export async function transform(
 ) {
   const nodes: Nodes = {};
   await find_nodes(nodes);
+
+  console.log(nodes);
 
   reader.data(async (input) => {
     try {

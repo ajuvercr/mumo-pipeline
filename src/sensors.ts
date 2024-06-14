@@ -1,8 +1,7 @@
 import { Quad, Term } from "@rdfjs/types";
-import { createTermNamespace } from "@treecg/types";
+import { createTermNamespace, RDF } from "@treecg/types";
 import { CBDShapeExtractor } from "extract-cbd-shape";
 import { readFileSync, writeFileSync } from "fs";
-import { readFile } from "fs/promises";
 import jsonld from "jsonld";
 import { NamedNode, Parser, Writer } from "n3";
 import { Response } from "node-fetch";
@@ -10,6 +9,7 @@ import { RdfStore } from "rdf-stores";
 import * as lens from "rdf-lens";
 import path from "path";
 import { BasicLens, Cont } from "rdf-lens";
+import { cached } from "./mapper";
 
 export type Sensor = {
   name: string;
@@ -23,6 +23,7 @@ export type Location = {
   postal: string;
 };
 export type Node = {
+  id: Term;
   name: string;
   related: string;
   hosts: Sensor[];
@@ -69,17 +70,25 @@ const myFetch = async (
     return resp;
   }
 };
+const cachedFetch = cached(<typeof fetch>myFetch);
 
 export async function extract<T>(
   json: string,
   shapeStore: RdfStore,
   lens: BasicLens<Cont, T>,
   bump?: (item: T, quads: Quad[]) => void,
+  from_cache = false,
 ) {
-  const nquads = await jsonld.toRDF(JSON.parse(json), {
-    format: "application/n-quads",
-  });
-  const quads = new Parser().parse(nquads);
+  let quads: Quad[] = [];
+  let usedCache = false;
+
+  if (quads.length == 0) {
+    const nquads = await jsonld.toRDF(JSON.parse(json), {
+      format: "application/n-quads",
+    });
+    quads = new Parser().parse(nquads);
+    console.log(new Writer().quadsToString(quads));
+  }
 
   if (json.match("humidity")) {
     writeFileSync("/tmp/log.json", json, { encoding: "utf8" });
@@ -89,12 +98,18 @@ export async function extract<T>(
   }
   const subjects = filter(
     quads
-      .filter((x) => x.predicate.equals(SOSA.custom("hosts")))
-      .map((x) => x.subject),
+      .filter(
+        (x) =>
+          x.predicate.equals(RDF.terms.type) &&
+          x.object.equals(SOSA.custom("Platform")),
+      )
+      .map((x) => {
+        return x.subject;
+      }),
   ).filter((v, i, xs) => xs.findIndex((x) => x.equals(v)) == i);
 
   const extractor = new CBDShapeExtractor(shapeStore, undefined, {
-    fetch: <typeof fetch>myFetch,
+    fetch: <typeof fetch>cachedFetch,
   });
   const store = RdfStore.createDefault();
   quads.forEach((quad) => store.addQuad(quad));
@@ -123,36 +138,37 @@ export async function extract<T>(
   }
 }
 
-async function main() {
-  const shape = await readFile("./shape.ttl", { encoding: "utf8" });
-  const shapeTriples = new Parser().parse(shape);
-  const shapeStore = RdfStore.createDefault();
-  shapeTriples.forEach((x) => shapeStore.addQuad(x));
-
-  const shapes = get_shapes();
-
-  const resp = await fetch(
-    "https://heron.libis.be/momu-test/api/items?property[0][joiner]=and&property[0][property][]=820&property[0][type]=in&property[0][text]=mumo",
-  );
-  const data = await resp.text();
-  await extract<Node>(data, shapeStore, shapes.lenses["NodeShape"], (x) =>
-    console.log("item", x),
-  );
-
-  // const start = await fetcher(
-  //   new SimpleStream<string>().on("data", (page) => {
-  //     return extract<Node>(
-  //       page,
-  //       shapeStore,
-  //       shapes.lenses["NodeShape"],
-  //       (item) => {
-  //         console.log("item", item);
-  //       },
-  //     );
-  //   }),
-  //   "https://heron.libis.be/momu-test/api/items?sort_by=id&sort_order=asc&page=0",
-  // );
-  // start();
-}
-
-main();
+//
+// async function main() {
+//   const shape = await readFile("./shape.ttl", { encoding: "utf8" });
+//   const shapeTriples = new Parser().parse(shape);
+//   const shapeStore = RdfStore.createDefault();
+//   shapeTriples.forEach((x) => shapeStore.addQuad(x));
+//
+//   const shapes = get_shapes();
+//
+//   const resp = await fetch(
+//     "https://heron.libis.be/momu-test/api/items?property[0][joiner]=and&property[0][property][]=820&property[0][type]=in&property[0][text]=mumo",
+//   );
+//   const data = await resp.text();
+//   await extract<Node>(data, shapeStore, shapes.lenses["NodeShape"], (x) =>
+//     console.log("item", x),
+//   );
+//
+//   // const start = await fetcher(
+//   //   new SimpleStream<string>().on("data", (page) => {
+//   //     return extract<Node>(
+//   //       page,
+//   //       shapeStore,
+//   //       shapes.lenses["NodeShape"],
+//   //       (item) => {
+//   //         console.log("item", item);
+//   //       },
+//   //     );
+//   //   }),
+//   //   "https://heron.libis.be/momu-test/api/items?sort_by=id&sort_order=asc&page=0",
+//   // );
+//   // start();
+// }
+//
+// main();

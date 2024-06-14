@@ -78,7 +78,7 @@
                   "view": {
                     "@type": "MongoSDSView",
                     "descriptionId": "http://localhost:3000/ldes/#customFragmentation",
-                    "streamId": "http://example.com/test",
+                    "streamId": "http://example.com/",
                     "db": {
                       "@id": "urn:solid-server:default:DBConfig"
                     },

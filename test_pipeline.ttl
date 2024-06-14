@@ -1,36 +1,30 @@
 @prefix rml: <http://w3id.org/rml/>.
+@prefix sh: <http://www.w3.org/ns/shacl#>.
 @prefix js: <https://w3id.org/conn/js#>.
-@prefix ws: <https://w3id.org/conn/ws#>.
-@prefix : <https://w3id.org/conn#>.
 @prefix owl: <http://www.w3.org/2002/07/owl#>.
-@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
-@prefix rml: <https://w3id.org/conn/rml#>.
-@prefix ql: <http://semweb.mmlab.be/ns/ql#>.
+@prefix : <https://w3id.org/conn#>.
 
-<> owl:imports <./node_modules/@ajuvercr/js-runner/ontology.ttl>.
-<> owl:imports <./node_modules/@ajuvercr/js-runner/channels/file.ttl>.
+# <> owl:imports <https://raw.githubusercontent.com/TREEcg/extract-cbd-shape/main/tests/01%20-%20fetching%20a%20shacl%20shape/shacl-shacl.ttl>.
 <> owl:imports <./proc/fetch.ttl>.
+
 <> owl:imports <./proc/mumo_mapper.ttl>.
-
-
-<json/writer> a js:JsWriterChannel.
-<json/reader> a js:JsReaderChannel.
-[ ] a js:JsChannel;
-  :reader <json/reader>;
-  :writer <json/writer>.
-
 [ ] a js:MumoFetch;
-  js:startUrl "http://localhost:8080/?index=0";
-  # js:savePath <save>;
-  js:intervalMs 1000;
-  js:dataOutput <json/writer>.
+  js:dataOutput "ti";
+  js:startUrl "tes".
 
 [ ] a js:MumoMapper;
-  js:dataInput <json/reader>;
-  js:dataOutput <output>.
+  js:dataOutput 2;
+  js:dataInput 2.
 
-<output> a :FileWriterChannel;
-  :fileReadFirstContent "true";
-  :fileOnReplace "false";
-  :filePath <./output.ttl>.
+[ ] a js:MumoMapper;
+  js:dataOutput <>;
+  js:dataInput <>.
+
+[ ] a js:MumoFetch;
+  js:dataOutput <>;
+  js:startUrl "".
+
+[ ] a js:MumoMapper;
+  js:dataOutput <>;
+  js:dataInput <>.
 
