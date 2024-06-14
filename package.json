@@ -1,6 +1,6 @@
 {
   "name": "@ajuvercr/mumo-pipeline",
-  "version": "1.0.2",
+  "version": "1.0.3-alpha.1",
   "type": "module",
   "description": "",
   "scripts": {
