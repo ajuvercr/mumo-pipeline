@@ -5,8 +5,7 @@ import * as N3 from "n3";
 import { extract, get_shapes, Node, Sensor } from "./sensors";
 import { RdfStore } from "rdf-stores";
 import { isotc, mumoData, qudt, qudtUnit, sosa } from "./ontologies";
-import path from "path";
-import { readFile } from "fs/promises";
+import { $INLINE_FILE } from "ts-transformer-inline-file";
 
 export type Nodes = { [related: string]: { node: Node; quads: Quad[] } };
 const { quad, literal, blankNode } = N3.DataFactory;
@@ -212,9 +211,7 @@ export function cached(fetch_f: typeof fetch): typeof fetch {
 const thisFetch = cached(fetch);
 
 export async function find_nodes(nodes: Nodes, from_cache = false) {
-  const shape = await readFile(path.join(__dirname, "../shape.ttl"), {
-    encoding: "utf8",
-  });
+  const shape = $INLINE_FILE("../shape.ttl");
   const shapeTriples = new N3.Parser().parse(shape);
   const shapeStore = RdfStore.createDefault();
   shapeTriples.forEach((x) => shapeStore.addQuad(x));
@@ -222,9 +219,7 @@ export async function find_nodes(nodes: Nodes, from_cache = false) {
   const shapes = get_shapes();
 
   const defaultQuads = new N3.Parser().parse(
-    await readFile(path.join(__dirname, "../default_node.ttl"), {
-      encoding: "utf8",
-    }),
+    $INLINE_FILE("../default_node.ttl"),
   );
   const defaultNode = shapes.lenses["NodeShape"].execute({
     quads: defaultQuads,

@@ -1,15 +1,15 @@
 import { Quad, Term } from "@rdfjs/types";
 import { createTermNamespace, RDF } from "@treecg/types";
 import { CBDShapeExtractor } from "extract-cbd-shape";
-import { readFileSync, writeFileSync } from "fs";
+import { writeFileSync } from "fs";
 import jsonld from "jsonld";
 import { NamedNode, Parser, Writer } from "n3";
 import { Response } from "node-fetch";
 import { RdfStore } from "rdf-stores";
 import * as lens from "rdf-lens";
-import path from "path";
 import { BasicLens, Cont } from "rdf-lens";
 import { cached } from "./mapper";
+import { $INLINE_FILE } from "ts-transformer-inline-file";
 
 export type Sensor = {
   name: string;
@@ -25,16 +25,14 @@ export type Location = {
 export type Node = {
   id: Term;
   name: string;
+  description: string;
   related: string;
   hosts: Sensor[];
   location: Location;
 };
 
 const SOSA = createTermNamespace("http://www.w3.org/ns/sosa/");
-
-const quads_str = readFileSync(path.join(__dirname, "../sensor_shape.ttl"), {
-  encoding: "utf8",
-});
+const quads_str = $INLINE_FILE("../sensor_shape.ttl");
 
 export function get_shapes() {
   const quads = new Parser().parse(quads_str);

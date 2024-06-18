@@ -99,12 +99,24 @@
     tree:fragmentationPathName dcterms:title;
   ] [
     a tree:SubjectFragmentation;
-    tree:fragmentationPath ( sosa:madeBySensor );
+    tree:fragmentationPath (
+      <http://def.isotc211.org/iso19156/2011/Observation#OM_Observation.result>
+      <http://qudt.org/1.1/schema/qudt#unit>
+    );
     tree:fragmentationDefaultName "unknown";
-    tree:fragmentationPathName sosa:observes;
+    tree:fragmentationPathName (
+      [ sh:inversePath <http://qudt.org/1.1/schema/qudt#unit> ]
+      [ sh:inversePath <http://def.isotc211.org/iso19156/2011/Observation#OM_Observation.result> ]
+      sosa:madeBySensor
+      sosa:observes
+    );
   ] [
+    #   a tree:TemporalFragmentation;
+    #   tree:fragmentationPath ( <http://def.isotc211.org/iso19156/2011/Observation#OM_Observation.resultTime> );
+    #   tree:maxGranularity "month";
+    # ] [
     a tree:PageFragmentation;
-    tree:pageSize 200;
+    tree:pageSize 1000;
   ] );
   js:savePath <./buckets_save.json>;
   js:outputStreamId <http://example.com/test>.
