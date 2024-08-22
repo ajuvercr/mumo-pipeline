@@ -7,38 +7,38 @@
 @prefix ex: <http://example.org/>.
 @prefix cidoc: <http://www.cidoc-crm.org/cidoc-crm/>.
 
-# <http://www.cidoc-crm.org/cidoc-crm/P55_has_current_location>
-
-ex:Location a sh:NodeShape;
-  sh:property [
-    sh:path rdf:type;
-    sh:minCount 1;
-  ], [
-    sh:path <http://purl.org/dc/terms/isPartOf>;
-    sh:node ex:Location;
-  ].
-
 # http://www.cidoc-crm.org/cidoc-crm/P53_has_former_or_current_location
-ex:Shape a sh:NodeShape;
-  sh:property [
-    sh:path sosa:hosts;
-    sh:minCount 1;
-    sh:node [ sh:property [
-      sh:path rdf:type;
-      sh:minCount 1;
-    ] ];
-  ], [
-    sh:path cidoc:P55_has_current_location;
-    sh:minCount 1;
-    sh:node ex:Location;
-  ].
-
 ex:Measurement a sh:NodeShape;
   sh:property [
     sh:path sosa:madeBySensor;
+    sh:minCount 1;
     sh:node [ sh:property [
       sh:path [ sh:inversePath sosa:hosts ];
-      sh:node ex:Shape;
+      sh:node [
+        a sh:NodeShape;
+        sh:property [
+          sh:path sosa:hosts;
+          sh:minCount 1;
+          sh:node [ sh:property [
+            sh:path rdf:type;
+            sh:minCount 1;
+          ] ];
+        ], [
+          sh:path cidoc:P55_has_current_location;
+          sh:minCount 1;
+          sh:node [
+            a sh:NodeShape;
+            sh:property [
+              sh:path rdf:type;
+              sh:minCount 1;
+            ], [
+              sh:path <http://purl.org/dc/terms/isPartOf>;
+              sh:node ex:Location;
+            ];
+          ];
+        ];
+      ];
+      sh:minCount 1;
     ] ];
   ].
 

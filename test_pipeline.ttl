@@ -7,6 +7,10 @@
 # <> owl:imports <https://raw.githubusercontent.com/TREEcg/extract-cbd-shape/main/tests/01%20-%20fetching%20a%20shacl%20shape/shacl-shacl.ttl>.
 <> owl:imports <./proc/fetch.ttl>.
 
+[] a js:MumoFetch;
+    js:dataOutput <>;
+    js:startUrl <>.
+
 <> owl:imports <./proc/mumo_mapper.ttl>.
 [ ] a js:MumoFetch;
   js:dataOutput "ti";
