@@ -13,42 +13,42 @@
 @prefix rml: <https://w3id.org/conn/rml#>.
 @prefix ql: <http://semweb.mmlab.be/ns/ql#>.
 
-<> owl:imports <./node_modules/@ajuvercr/js-runner/ontology.ttl>.
-<> owl:imports <./node_modules/@ajuvercr/js-runner/channels/file.ttl>.
-<> owl:imports <./node_modules/@ajuvercr/js-runner/channels/http.ttl>.
+<> owl:imports <./node_modules/@rdfc/js-runner/ontology.ttl>.
+<> owl:imports <./node_modules/@rdfc/js-runner/channels/file.ttl>.
+<> owl:imports <./node_modules/@rdfc/js-runner/channels/http.ttl>.
 <> owl:imports <./proc/fetch.ttl>.
 <> owl:imports <./proc/mumo_mapper.ttl>.
-<> owl:imports <./node_modules/sds-processors/configs/bucketizer.ttl>.
-<> owl:imports <./node_modules/sds-processors/configs/sdsify.ttl>.
-<> owl:imports <./node_modules/@treecg/sds-storage-writer-mongo/processor.ttl>.
+<> owl:imports <./node_modules/@rdfc/sds-processors-ts/configs/bucketizer.ttl>.
+<> owl:imports <./node_modules/@rdfc/sds-processors-ts/configs/sdsify.ttl>.
+<> owl:imports <./node_modules/@rdfc/sds-storage-writer-ts/processor.ttl>.
 <> owl:imports <./shape.ttl>.
 <json/writer> a js:JsWriterChannel.
 <json/reader> a js:JsReaderChannel.
-[ ] a :Channel;
+[ ] a :Channel, js:JsChannel;
   :reader <json/reader>;
   :writer <json/writer>.
 
 <ttl/writer> a js:JsWriterChannel.
 <ttl/reader> a js:JsReaderChannel.
-[ ] a :Channel;
+[ ] a :Channel, js:JsChannel;
   :reader <ttl/reader>;
   :writer <ttl/writer>.
 
 <sds-raw/writer> a js:JsWriterChannel.
 <sds-raw/reader> a js:JsReaderChannel.
-[ ] a :Channel;
+[ ] a :Channel, js:JsChannel;
   :reader <sds-raw/reader>;
   :writer <sds-raw/writer>.
 
 <raw/buckets/writer> a js:JsWriterChannel.
 <raw/buckets/reader> a js:JsReaderChannel.
-[ ] a :Channel;
+[ ] a :Channel, js:JsChannel;
   :reader <raw/buckets/reader>;
   :writer <raw/buckets/writer>.
 
 <meta/buckets/writer> a js:JsWriterChannel.
 <meta/buckets/reader> a js:JsReaderChannel.
-[ ] a :Channel;
+[ ] a :Channel, js:JsChannel;
   :reader <meta/buckets/reader>;
   :writer <meta/buckets/writer>.
 
@@ -66,9 +66,54 @@
   js:input <ttl/reader>;
   js:output <sds-raw/writer>;
   js:objectType <http://def.isotc211.org/iso19156/2011/Observation#OM_Observation>;
+  js:timestampPath <http://def.isotc211.org/iso19156/2011/Observation#OM_Observation.resultTime>;
+  js:typeFilter <http://def.isotc211.org/iso19156/2011/Observation#OM_Observation>;
   js:stream <https://w3id.org/sds#Stream>;
-  js:type <http://def.isotc211.org/iso19156/2011/Observation#OM_Observation>;
-  js:shape ex:Measurement.
+  js:shape """
+@prefix sosa: <http://www.w3.org/ns/sosa/>.
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix sh: <http://www.w3.org/ns/shacl#>.
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
+@prefix foaf: <http://xmlns.com/foaf/0.1/>.
+@prefix ex: <http://example.org/>.
+@prefix cidoc: <http://www.cidoc-crm.org/cidoc-crm/>.
+
+# http://www.cidoc-crm.org/cidoc-crm/P53_has_former_or_current_location
+ex:Measurement a sh:NodeShape;
+  sh:property [
+    sh:path sosa:madeBySensor;
+    sh:minCount 1;
+    sh:node [ sh:property [
+      sh:path [ sh:inversePath sosa:hosts ];
+      sh:node [
+        a sh:NodeShape;
+        sh:property [
+          sh:path sosa:hosts;
+          sh:minCount 1;
+          sh:node [ sh:property [
+            sh:path rdf:type;
+            sh:minCount 1;
+          ] ];
+        ], [
+          sh:path cidoc:P55_has_current_location;
+          sh:minCount 1;
+          sh:node [
+            a sh:NodeShape;
+            sh:property [
+              sh:path rdf:type;
+              sh:minCount 1;
+            ], [
+              sh:path <http://purl.org/dc/terms/isPartOf>;
+              sh:node ex:Location;
+            ];
+          ];
+        ];
+      ];
+      sh:minCount 1;
+    ] ];
+  ].
+""".
 
 <metadata/in> a :FileReaderChannel;
   :fileReadFirstContent "true";
@@ -82,6 +127,14 @@
     js:dataOutput <raw/buckets/writer>;
     js:metadataOutput <meta/buckets/writer>;
   ];
+  # js:bucketizeStrategy ( [
+  #   a tree:TimebasedFragmentation;
+  #   tree:timestampPath <http://def.isotc211.org/iso19156/2011/Observation#OM_Observation.resultTime>;
+  #   tree:maxSize 10;
+  #   tree:k 4;
+  #   tree:minBucketSpan 3600;
+  # ] );
+  # In seconds
   js:bucketizeStrategy ( [
     a tree:SubjectFragmentation;
     tree:fragmentationPath (
@@ -110,21 +163,27 @@
       sosa:madeBySensor
       sosa:observes
     );
-  ] [
-    #   a tree:TemporalFragmentation;
-    #   tree:fragmentationPath ( <http://def.isotc211.org/iso19156/2011/Observation#OM_Observation.resultTime> );
-    #   tree:maxGranularity "month";
-    # ] [
-    a tree:PageFragmentation;
-    tree:pageSize 1000;
   ] );
+  # ] [
+  #   a tree:TemporalFragmentation;
+  #   tree:fragmentationPath ( <http://def.isotc211.org/iso19156/2011/Observation#OM_Observation.resultTime> );
+  #   tree:maxGranularity "month";
+  # [
+  #  a tree:PageFragmentation;
+  #  tree:pageSize 1000;
   js:savePath <./buckets_save.json>;
-  js:outputStreamId <http://example.com/test>.
+  js:outputStreamId <https://example.org/ns#>.
 
-[ ] a js:SDSIngest;
+[ ] a js:Ingest;
   # js:dataInput <sds-raw/reader>;
   # js:metadataInput <metadata/in>;
   js:dataInput <raw/buckets/reader>;
   js:metadataInput <meta/buckets/reader>;
-  js:database "mongodb://127.0.0.1:27017/mumotest".
+  js:database [
+    js:data "DATA";
+    js:index "INDEX";
+    js:metadata "META";
+    js:url "mongodb://127.0.0.1:27017/mumotest";
+  ].
 
+# js:url "mongodb://mongodb:27017/mumotest";

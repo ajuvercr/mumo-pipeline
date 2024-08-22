@@ -85,7 +85,6 @@ export async function extract<T>(
       format: "application/n-quads",
     });
     quads = new Parser().parse(nquads);
-    console.log(new Writer().quadsToString(quads));
   }
 
   if (json.match("humidity")) {

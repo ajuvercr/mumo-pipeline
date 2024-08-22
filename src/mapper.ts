@@ -1,5 +1,5 @@
 import { NamedNode, Quad } from "@rdfjs/types";
-import type { Stream, Writer } from "@ajuvercr/js-runner";
+import type { Stream, Writer } from "@rdfc/js-runner";
 import { RDF, XSD } from "@treecg/types";
 import * as N3 from "n3";
 import { extract, get_shapes, Node, Sensor } from "./sensors";
@@ -140,18 +140,22 @@ function do_transform(input: string, nodes: Nodes): string[] {
 
   const node = nodes[data.end_device_ids.dev_eui] || nodes["default"];
 
-  console.log("Found nodes", Object.keys(nodes));
-  console.log("Current data", data.end_device_ids);
+  // console.log("Found nodes", Object.keys(nodes));
+  // console.log(
+  //   "Current data",
+  //   data.end_device_ids.dev_eui,
+  //   data.end_device_ids.device_id,
+  // );
 
   const types = node
     ? node.node.hosts.map((x) => x.observes)
     : Object.keys(typeDict);
 
-  console.log(
-    "Found node",
-    !!node,
-    node?.node.hosts.map((x) => x.observes),
-  );
+  // console.log(
+  //   "Found node",
+  //   !!node,
+  //   node?.node.hosts.map((x) => x.observes),
+  // );
 
   for (let thisTy of types) {
     const ty = alias[thisTy];
@@ -165,10 +169,11 @@ function do_transform(input: string, nodes: Nodes): string[] {
           }
           const writer = new N3.Writer();
           const output = writer.quadsToString(obj);
+          console.log("Quads", obj.length);
           strings.push(output);
         }
       }
-    } catch (ex: any) { }
+    } catch (ex: any) {}
   }
 
   return strings;
@@ -231,6 +236,7 @@ export async function find_nodes(nodes: Nodes, from_cache = false) {
   const resp = await thisFetch(
     "https://heron.libis.be/momu/api/items?resource_template_id[]=21&resource_template_id[]=9",
   );
+  console.log("Got response!");
   const data = await resp.text();
 
   await extract<Node>(
@@ -250,8 +256,6 @@ export async function transform(
 ) {
   const nodes: Nodes = {};
   await find_nodes(nodes);
-
-  console.log(nodes);
 
   reader.data(async (input) => {
     try {

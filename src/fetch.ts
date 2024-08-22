@@ -1,6 +1,6 @@
 import { readFileSync, writeFileSync } from "fs";
 import fetch, { Headers } from "node-fetch";
-import type { Writer } from "@ajuvercr/js-runner";
+import type { Writer } from "@rdfc/js-runner";
 
 interface Link {
   target: string;
@@ -83,7 +83,7 @@ async function start(
     try {
       url = readFileSync(save_path, { encoding: "utf8" });
       url = await findNextUrl(url, interval_ms, stop);
-    } catch (ex: any) { }
+    } catch (ex: any) {}
   }
 
   return async () => {
@@ -94,16 +94,16 @@ async function start(
       let links = extract_links(resp.headers);
 
       const text = await resp.text();
-      console.log("got text!", text.length);
+      // console.log("got text!", text.length);
 
       await writer.push(text);
-      // await new Promise(res => setTimeout(res, 1000))
+      await new Promise((res) => setTimeout(res, 1000));
       save(url);
 
       url = await findNextUrl(url, interval_ms, stop, links);
     }
 
-    await writer.end()
+    await writer.end();
   };
 }
 
