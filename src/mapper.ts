@@ -5,7 +5,8 @@ import * as N3 from "n3";
 import { extract, get_shapes, Node, Sensor } from "./sensors";
 import { RdfStore } from "rdf-stores";
 import { isotc, mumoData, qudt, qudtUnit, sosa } from "./ontologies";
-import { $INLINE_FILE } from "ts-transformer-inline-file";
+import { $INLINE_FILE } from "@ajuvercr/ts-transformer-inline-file";
+import { BasicLens, Cont } from "rdf-lens";
 
 export type Nodes = { [related: string]: { node: Node; quads: Quad[] } };
 const { quad, literal, blankNode } = N3.DataFactory;
@@ -226,7 +227,7 @@ export async function find_nodes(nodes: Nodes, from_cache = false) {
   const defaultQuads = new N3.Parser().parse(
     $INLINE_FILE("../default_node.ttl"),
   );
-  const defaultNode = shapes.lenses["NodeShape"].execute({
+  const defaultNode = <Node> shapes.lenses["NodeShape"].execute({
     quads: defaultQuads,
     id: new N3.NamedNode("http://mumo.be/data/unknown/node"),
   });
@@ -242,7 +243,7 @@ export async function find_nodes(nodes: Nodes, from_cache = false) {
   await extract<Node>(
     data,
     shapeStore,
-    shapes.lenses["NodeShape"],
+    <BasicLens<Cont, Node>> shapes.lenses["NodeShape"],
     (node, quads) => {
       nodes[node.related] = { node, quads };
     },

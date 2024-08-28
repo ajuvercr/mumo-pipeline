@@ -12,7 +12,7 @@
     ],
     "plugins": [
       {
-        "transform": "ts-transformer-inline-file/transformer"
+        "transform": "@ajuvercr/ts-transformer-inline-file/transformer"
       }
     ],
     "paths": {
