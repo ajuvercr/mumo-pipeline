@@ -9,7 +9,7 @@ import { RdfStore } from "rdf-stores";
 import * as lens from "rdf-lens";
 import { BasicLens, Cont } from "rdf-lens";
 import { cached } from "./mapper";
-import { $INLINE_FILE } from "ts-transformer-inline-file";
+import { $INLINE_FILE } from "@ajuvercr/ts-transformer-inline-file";
 
 export type Sensor = {
   name: string;

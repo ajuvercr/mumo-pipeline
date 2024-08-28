@@ -97,7 +97,7 @@ async function start(
       // console.log("got text!", text.length);
 
       await writer.push(text);
-      await new Promise((res) => setTimeout(res, 1000));
+      // await new Promise((res) => setTimeout(res, 1000));
       save(url);
 
       url = await findNextUrl(url, interval_ms, stop, links);
