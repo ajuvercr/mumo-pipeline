@@ -1,0 +1,17 @@
+# Start from a Node container
+FROM node:lts-alpine
+
+# FROM oven/bun:1 as base
+
+ARG FILES
+
+WORKDIR /workspace
+
+# install dependencies into temp directory
+# this will cache them and speed up future builds
+COPY .. /workspace/
+RUN ls
+RUN npm ci
+RUN npm run build
+
+ENTRYPOINT [ "npx", "js-runner"]

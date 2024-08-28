@@ -136,21 +136,21 @@ ex:Measurement a sh:NodeShape;
   # ] );
   # In seconds
   js:bucketizeStrategy ( [
-      a tree:SubjectFragmentation;
-      tree:fragmentationPath (
-        sosa:madeBySensor
-        [ sh:inversePath sosa:hosts ]
-        cidoc:P55_has_current_location
-        [ sh:zeroOrMorePath dcterms:isPartOf ]
-      );
-      tree:fragmentationDefaultName "unlocated";
-      tree:fragmentationPathName dcterms:title;
-    ] [
-      a tree:SubjectFragmentation;
-      tree:fragmentationPath ( sosa:madeBySensor [ sh:inversePath sosa:hosts ] );
-      tree:fragmentationDefaultName "unknown";
-      tree:fragmentationPathName dcterms:title;
-    ] [
+    a tree:SubjectFragmentation;
+    tree:fragmentationPath (
+      sosa:madeBySensor
+      [ sh:inversePath sosa:hosts ]
+      cidoc:P55_has_current_location
+      [ sh:zeroOrMorePath dcterms:isPartOf ]
+    );
+    tree:fragmentationDefaultName "unlocated";
+    tree:fragmentationPathName dcterms:title;
+  ] [
+    a tree:SubjectFragmentation;
+    tree:fragmentationPath ( sosa:madeBySensor [ sh:inversePath sosa:hosts ] );
+    tree:fragmentationDefaultName "unknown";
+    tree:fragmentationPathName dcterms:title;
+  ] [
     a tree:SubjectFragmentation;
     tree:fragmentationPath (
       <http://def.isotc211.org/iso19156/2011/Observation#OM_Observation.result>
@@ -182,7 +182,8 @@ ex:Measurement a sh:NodeShape;
     js:data "DATA";
     js:index "INDEX";
     js:metadata "META";
-    js:url "mongodb://127.0.0.1:27017/mumotest";
+    # js:url "mongodb://127.0.0.1:27017/mumotest";
+    js:url "mongodb://mongodb:27017/mumotest";
   ].
 
 # js:url "mongodb://mongodb:27017/mumotest";

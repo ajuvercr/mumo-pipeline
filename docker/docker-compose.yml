@@ -1,0 +1,41 @@
+version: '3.8'
+services:
+  mongodb:
+    container_name: mongodb
+    image: mongo:latest
+    ports:
+    - 27017:27017
+    networks:
+    - ldes
+
+  pipeline:
+    environment:
+      DEBUG: "*"
+    build: 
+      context: ..
+      dockerfile: ./docker/pipeline.yml
+    volumes:
+      - ..:/workspace      
+    command: /workspace/pipeline.ttl
+    networks:
+    - ldes
+    depends_on:
+    - mongodb
+
+  ldesserver:
+    build:
+      context: ldes
+      dockerfile: ./Dockerfile
+    volumes:
+      - ./ldes/data:/ldes-solid-server/data
+    command: -f ./data
+    networks:
+      - ldes
+    depends_on:
+      - mongodb
+    ports:
+      - 3000:3000
+    restart: always
+
+networks:
+    ldes:

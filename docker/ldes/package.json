@@ -1,0 +1,10 @@
+{
+  "name": "ldes-solid-server",
+  "scripts": {
+    "start": "npx @solid/community-server -c ./config-ldes.json -b http://localhost:3000"
+  },
+  "dependencies": {
+    "@solid/community-server": "^7.1.2",
+    "ldes-solid-server": "^0.1.0-alpha.3"
+  }
+}
