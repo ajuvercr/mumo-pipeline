@@ -1,94 +1,58 @@
-import { NamedNode, Quad } from "@rdfjs/types";
+import { Quad } from "@rdfjs/types";
 import type { Stream, Writer } from "@rdfc/js-runner";
-import { RDF, XSD } from "@treecg/types";
+import { getLogger, RDF, XSD } from "@treecg/types";
 import * as N3 from "n3";
-import { extract, get_shapes, Node, Sensor } from "./sensors";
-import { RdfStore } from "rdf-stores";
-import { isotc, mumoData, qudt, qudtUnit, sosa } from "./ontologies";
-import { $INLINE_FILE } from "@ajuvercr/ts-transformer-inline-file";
-import { BasicLens, Cont } from "rdf-lens";
+import { isotc, mumoData, qudt, sosa } from "./ontologies";
+import {
+  alias,
+  getType,
+  Model,
+  Payload1,
+  Payload2,
+  SensorDevices,
+} from "./utils";
+import {
+  getOmeka,
+  NodeTemplateId,
+  Omeka,
+  OmekaChannel,
+  OmekaDevice,
+  OmekaNode,
+} from "./omeka";
+import { Item } from "omeka-s-tools";
 
-export type Nodes = { [related: string]: { node: Node; quads: Quad[] } };
-const { quad, literal, blankNode } = N3.DataFactory;
-type Model = {
-  end_device_ids: {
-    device_id: string;
-    application_ids: {
-      application_id: string;
-    };
-    dev_eui: string;
-    dev_addr: string;
-  };
-  correlation_ids: string[];
-  received_at: string;
-  uplink_message: {
-    f_port: number;
-    f_cnt: number;
-    frm_payload: string;
-    decoded_payload: { version: number } & { [typ: string]: number };
-    rx_metadata: {
-      gateway_ids: {
-        gateway_id: string;
-        eui: string;
-      };
-      time: string;
-      timestamp: number;
-      rssi: number;
-      channel_rssi: number;
-      snr: number;
-      uplink_token: string;
-      received_at: string;
-    }[];
-    settings: {
-      data_rate: {
-        lora: {
-          bandwidth: number;
-          spreading_factor: number;
-          coding_rate: string;
-        };
-      };
-      frequency: string;
-      timestamp: number;
-      time: string;
-    };
-    received_at: string;
-    consumed_airtime: string;
-    network_ids: {
-      net_id: string;
-      tenant_id: string;
-      cluster_id: string;
-      cluster_address: string;
-    };
-  };
-};
+const logger = getLogger("mumo-mapper");
+const { quad, literal, blankNode, namedNode } = N3.DataFactory;
 
-const alias: { [key: string]: string } = {
-  Temperatuur: "temperature",
-  Luchtvochtigheid: "humidity",
-  temperature: "temperature",
-  humidity: "humidity",
-  battery: "battery",
-  pressure: "pressure",
-};
+export async function setup_nodes(
+  nodes: MyNodes,
+  omeka: Omeka,
+  item_set = 34332,
+) {
+  const items = await omeka.templates.get_items_set(item_set);
+  const omeka_nodes = <Array<Item<OmekaNode>>>(
+    items.filter((x) => x.factory.template.id === NodeTemplateId)
+  );
 
-const typeDict: { [key: string]: NamedNode } = {
-  temperature: qudtUnit.DegreeCelsius,
-  battery: qudtUnit.Battery,
-  humidity: qudtUnit.RelHumidity,
-  pressure: qudtUnit.Pressure,
-};
-
-function observation(data: Model, key: string, sensor?: Sensor) {
-  const time = data.uplink_message.rx_metadata[0].time;
-
-  const subj = mumoData.custom(`${time}/${key}`);
-
-  const device_id = data.end_device_ids.device_id;
-  const value = data.uplink_message.decoded_payload[key];
-
-  if (!time || !subj || !device_id || !value) {
-    return;
+  console.log("Got nodes, lets get some quads");
+  for (const node of omeka_nodes) {
+    const euid = node.item["modsrdf:identifier"];
+    if (nodes[euid]) {
+      nodes[euid].node = node;
+    } else {
+      nodes[euid] = { node };
+    }
   }
+}
+
+function observation(
+  value: number,
+  time: number,
+  sensor: Item<OmekaChannel>,
+): Quad[] {
+  const subj = mumoData.custom(
+    `${time}/${sensor.item["dcterms:title"].replaceAll(" ", "")}`,
+  );
 
   const quads: Quad[] = [];
   const resultId = blankNode();
@@ -98,32 +62,22 @@ function observation(data: Model, key: string, sensor?: Sensor) {
     quad(
       subj,
       isotc["OM_Observation.resultTime"],
-      literal(time, XSD.terms.dateTime),
+      literal(new Date(time).toISOString(), XSD.terms.dateTime),
     ),
   );
   quads.push(quad(subj, isotc["OM_Observation.result"], resultId));
-  quads.push(
-    quad(
-      subj,
-      sosa.madeBySensor,
-      sensor
-        ? <N3.Quad_Object>sensor.id
-        : mumoData.custom(`sensor/${device_id}/${key}`),
-    ),
-  );
-
-  if (!sensor) {
-    quads.push(
-      quad(
-        mumoData.custom(`sensor/${device_id}`),
-        sosa.hosts,
-        mumoData.custom(`sensor/${device_id}/${key}`),
-      ),
-    );
-  }
+  quads.push(quad(subj, sosa.madeBySensor, namedNode(sensor.id)));
 
   quads.push(quad(resultId, RDF.terms.type, qudt.QuantityValue));
-  quads.push(quad(resultId, qudt.unit, typeDict[key]));
+  quads.push(
+    quad(
+      resultId,
+      qudt.unit,
+      namedNode(
+        sensor.item["mumo_generalfeaturemodel:GF_PropertyType.definition"],
+      ),
+    ),
+  );
   quads.push(
     quad(
       resultId,
@@ -135,133 +89,260 @@ function observation(data: Model, key: string, sensor?: Sensor) {
   return quads;
 }
 
-function do_transform(input: string, nodes: Nodes): string[] {
+export type MyNodes = {
+  [euid: string]: {
+    node: Item<OmekaNode>;
+    quads?: Quad[];
+  };
+};
+
+function asArray<T>(item: undefined | T | T[]): T[] {
+  if (item === undefined) return [];
+
+  if (Array.isArray(item)) return item;
+
+  return [item];
+}
+
+class TransformInstance {
+  private readonly euid: string;
+  private readonly name: string;
+  readonly item: MyNodes[string];
+  private readonly omeka: Omeka;
+
+  private constructor(
+    name: string,
+    euid: string,
+    item: MyNodes[string],
+    omeka: Omeka,
+  ) {
+    this.name = name;
+    this.euid = euid;
+    this.item = item;
+    this.omeka = omeka;
+  }
+
+  static async build(
+    euid: string,
+    name: string,
+    omeka: Omeka,
+    nodes: MyNodes,
+    ts: number | string,
+  ): Promise<TransformInstance> {
+    const item = nodes[euid];
+    if (item) {
+      logger.info("This euid has already been used " + euid);
+      return new TransformInstance(name, euid, item, omeka);
+    }
+
+    logger.info("This euid has not been used yet " + euid);
+    // This euid is not yet present
+    // lets build one
+
+    const created = new Date(ts).toISOString();
+    const identifier = `http://data.momu.be/items/id/${euid}`;
+    const node = await omeka.node.create(
+      {
+        "sosa:hosts": [],
+        "dcterms:title": name,
+        "dcterms:created": created,
+        "dcterms:hasPart": [],
+        "dcterms:identifier": identifier,
+        "modsrdf:identifier": euid,
+      },
+      34332,
+    );
+
+    nodes[euid] = {
+      node,
+    };
+
+    return new TransformInstance(name, euid, nodes[euid], omeka);
+  }
+
+  async get_device(deviceIdx: number, ts: number): Promise<Item<OmekaDevice>> {
+    const deviceName = SensorDevices[deviceIdx].name;
+    const foundDevice = asArray(this.item.node.item["dcterms:hasPart"]).find(
+      (x) => x.item["dcterms:publisher"] == deviceName,
+    );
+    if (foundDevice) return foundDevice;
+
+    logger.info(
+      `Device ${deviceName} was not yet present for ${this.name} (${this.euid})`,
+    );
+    // We didn't find this device yet on this node
+    // lets build one
+
+    const title = `${this.name} - ${deviceName}`;
+    const issued = new Date(ts).toISOString();
+    const device = await this.omeka.device.create(
+      {
+        "dcterms:title": title,
+        "dcterms:issued": issued,
+        "dcterms:publisher": deviceName,
+      },
+      34332,
+    );
+    this.item.node.item["dcterms:hasPart"] = asArray(
+      this.item.node.item["dcterms:hasPart"],
+    );
+    this.item.node.item["dcterms:hasPart"].push(device);
+    await this.item.node.save();
+    delete this.item.quads;
+
+    return device;
+  }
+
+  async get_sensor(
+    channelIdx: number,
+    deviceIdx: number,
+    ts: number,
+  ): Promise<Item<OmekaChannel>> {
+    const channelName = SensorDevices[deviceIdx].channels[channelIdx];
+    console.log("channel name", channelName);
+    const propertyType = getType(channelName);
+    const thisDevice = await this.get_device(deviceIdx, ts);
+    const thisDeviceIdx = thisDevice.idx;
+
+    const foundChannel = asArray(this.item.node.item["sosa:hosts"]).find(
+      (sensor) =>
+        sensor.item["dcterms:isPartOf"].idx === thisDeviceIdx &&
+        sensor.item["mumo_generalfeaturemodel:GF_PropertyType.definition"] ===
+          propertyType,
+    );
+    if (foundChannel) return foundChannel;
+
+    logger.info(
+      `Channel ${channelName} (${
+        SensorDevices[deviceIdx].name
+      }) was not yet present for ${this.name} (${this.euid})`,
+    );
+    // We didn't find this channel yet on this device on this node
+    // So let's build one
+
+    const identifier = `http://data.momu.be/items/id/${this.euid}-${
+      thisDevice.item["dcterms:publisher"]
+    }-${channelName}`;
+    const title = `${this.name} - ${
+      thisDevice.item["dcterms:publisher"]
+    } - ${channelName}`;
+    const channel = await this.omeka.channel.create(
+      {
+        "dcterms:isPartOf": thisDevice,
+        "mumo_generalfeaturemodel:GF_PropertyType.definition": propertyType,
+        "dcterms:identifier": identifier,
+        "dcterms:title": title,
+      },
+      34332,
+    );
+    this.item.node.item["sosa:hosts"] = asArray(
+      this.item.node.item["sosa:hosts"],
+    );
+    this.item.node.item["sosa:hosts"].push(channel);
+    await this.item.node.save();
+    delete this.item.quads;
+
+    return channel;
+  }
+}
+
+function payload_is_new_version(
+  payload: Payload1 | Payload2,
+): payload is Payload2 {
+  return (payload.payloadEncodingVersion || 0) > 16;
+}
+
+async function do_transform(
+  input: string,
+  nodes: MyNodes,
+  omeka: Omeka,
+): Promise<string[]> {
   const data: Model = JSON.parse(input);
   const strings: string[] = [];
 
-  const node = nodes[data.end_device_ids.dev_eui] || nodes["default"];
+  const instance = await TransformInstance.build(
+    data.end_device_ids.dev_eui,
+    data.end_device_ids.device_id,
+    omeka,
+    nodes,
+    data.received_at,
+  );
+  const payload = data.uplink_message.decoded_payload;
 
-  // console.log("Found nodes", Object.keys(nodes));
-  // console.log(
-  //   "Current data",
-  //   data.end_device_ids.dev_eui,
-  //   data.end_device_ids.device_id,
-  // );
+  const dataPoints: {
+    channel: Item<OmekaChannel>;
+    time: number;
+    value: number;
+  }[] = [];
 
-  const types = node
-    ? node.node.hosts.map((x) => x.observes)
-    : Object.keys(typeDict);
-
-  // console.log(
-  //   "Found node",
-  //   !!node,
-  //   node?.node.hosts.map((x) => x.observes),
-  // );
-
-  for (let thisTy of types) {
-    const ty = alias[thisTy];
-    try {
-      if (data.uplink_message.decoded_payload[ty]) {
-        const sensor = node?.node.hosts.find((x) => alias[x.observes] === ty);
-        const obj = observation(data, ty, sensor);
-        if (obj) {
-          if (node) {
-            obj.push(...node.quads);
-          }
-          const writer = new N3.Writer();
-          const output = writer.quadsToString(obj);
-          console.log("Quads", obj.length);
-          strings.push(output);
-        }
+  if (payload_is_new_version(payload)) {
+    for (const mg of payload.measurementGroups) {
+      for (const g of mg.measurements) {
+        console.log("Getting sensor", g.deviceIndex + 1, g.channelIndex);
+        const channel = await instance.get_sensor(
+          g.channelIndex,
+          g.deviceIndex + 1,
+          mg.timestamp,
+        );
+        dataPoints.push({ channel, time: mg.timestamp, value: g.value });
       }
-    } catch (ex: any) {}
+    }
+  } else {
+    for (const key of Object.keys(payload)) {
+      const valueIdx = SensorDevices[0].channels.indexOf(alias[key]);
+      if (valueIdx >= 0) {
+        console.log("Doing key", key, "with idx", valueIdx, payload[key]);
+        const channel = await instance.get_sensor(
+          valueIdx,
+          0,
+          data.uplink_message.settings.timestamp,
+        );
+        dataPoints.push({
+          channel,
+          time: data.uplink_message.settings.timestamp,
+          value: payload[key],
+        });
+      }
+    }
+  }
+
+  for (const dp of dataPoints) {
+    const obj = observation(dp.value, dp.time, dp.channel);
+    if (instance.item.quads) {
+      obj.push(...instance.item.quads);
+    } else {
+      const qs = await instance.item.node.getQuads(true, false);
+      instance.item.quads = qs;
+      obj.push(...qs);
+    }
+
+    const writer = new N3.Writer();
+    const output = writer.quadsToString(obj);
+    console.log("Quads", obj.length);
+    strings.push(output);
   }
 
   return strings;
 }
 
-export function cached(fetch_f: typeof fetch): typeof fetch {
-  const cache: {
-    [id: string]: {
-      status: number;
-      text: string;
-      headers: Headers;
-    };
-  } = {};
-  return async (a, b) => {
-    const c = cache[a.toString()];
-    if (c) {
-      console.log("Cached!");
-      return new Response(c.text, {
-        headers: c.headers,
-        status: c.status,
-      });
-    }
-
-    console.log("Fetching ", a.toString());
-    const resp = await fetch_f(a, b);
-    const text = resp.ok ? await resp.text() : "";
-    const nc = {
-      text,
-      headers: resp.headers,
-      status: resp.status,
-    };
-    cache[a.toString()] = nc;
-    return new Response(nc.text, {
-      headers: nc.headers,
-      status: nc.status,
-    });
-  };
-}
-
-const thisFetch = cached(fetch);
-
-export async function find_nodes(nodes: Nodes, from_cache = false) {
-  const shape = $INLINE_FILE("../shape.ttl");
-  const shapeTriples = new N3.Parser().parse(shape);
-  const shapeStore = RdfStore.createDefault();
-  shapeTriples.forEach((x) => shapeStore.addQuad(x));
-
-  const shapes = get_shapes();
-
-  const defaultQuads = new N3.Parser().parse(
-    $INLINE_FILE("../default_node.ttl"),
-  );
-  const defaultNode = <Node> shapes.lenses["NodeShape"].execute({
-    quads: defaultQuads,
-    id: new N3.NamedNode("http://mumo.be/data/unknown/node"),
-  });
-
-  nodes["default"] = { node: defaultNode, quads: defaultQuads };
-
-  const resp = await thisFetch(
-    "https://heron.libis.be/momu/api/items?resource_template_id[]=21&resource_template_id[]=9",
-  );
-  console.log("Got response!");
-  const data = await resp.text();
-
-  await extract<Node>(
-    data,
-    shapeStore,
-    <BasicLens<Cont, Node>> shapes.lenses["NodeShape"],
-    (node, quads) => {
-      nodes[node.related] = { node, quads };
-    },
-    from_cache,
-  );
-}
-
+import * as dotenv from "dotenv";
+dotenv.config({ path: ".env" });
 export async function transform(
   reader: Stream<string>,
   writer: Writer<string>,
 ) {
-  const nodes: Nodes = {};
-  await find_nodes(nodes);
+  const nodes: MyNodes = {};
+  const omeka = await getOmeka("https://heron.libis.be/momu-test/api");
+  // await find_nodes(nodes);
+  await setup_nodes(nodes, omeka);
+  setInterval(() => setup_nodes(nodes, omeka), 60000);
+  console.log("EUids", Object.keys(nodes));
 
   reader.data(async (input) => {
     try {
-      const objects = do_transform(input, nodes);
+      const objects = await do_transform(input, nodes, omeka);
       for (let object of objects) {
+        console.log(object);
         await writer.push(object);
       }
     } catch (e: any) {

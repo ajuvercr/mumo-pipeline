@@ -1,34 +1,41 @@
 import { Quad, Term } from "@rdfjs/types";
 import { createTermNamespace, RDF } from "@treecg/types";
 import { CBDShapeExtractor } from "extract-cbd-shape";
-import { writeFileSync } from "fs";
 import jsonld from "jsonld";
 import { NamedNode, Parser, Writer } from "n3";
 import { Response } from "node-fetch";
 import { RdfStore } from "rdf-stores";
 import * as lens from "rdf-lens";
 import { BasicLens, Cont } from "rdf-lens";
-import { cached } from "./mapper";
 import { $INLINE_FILE } from "@ajuvercr/ts-transformer-inline-file";
+import { cached } from "./utils";
 
 export type Sensor = {
-  name: string;
   id: Term;
+  name: string;
   observes: string;
 };
+
 export type Location = {
   name: string;
   address: string;
   isPartOf?: Location;
   postal: string;
 };
+
 export type Node = {
   id: Term;
   name: string;
   description: string;
   related: string;
-  hosts: Sensor[];
+  devices: Device[];
   location: Location;
+};
+
+export type Device = {
+  id: Term; // mumo:euid-bme680
+  title: string; // ie bme680
+  hasParts: Sensor[];
 };
 
 const SOSA = createTermNamespace("http://www.w3.org/ns/sosa/");
@@ -84,15 +91,10 @@ export async function extract<T>(
     const nquads = await jsonld.toRDF(JSON.parse(json), {
       format: "application/n-quads",
     });
+    console.log("nquads", nquads);
     quads = new Parser().parse(nquads);
   }
 
-  if (json.match("humidity")) {
-    writeFileSync("/tmp/log.json", json, { encoding: "utf8" });
-    writeFileSync("/tmp/log.ttl", new Writer().quadsToString(quads), {
-      encoding: "utf8",
-    });
-  }
   const subjects = filter(
     quads
       .filter(
@@ -113,16 +115,26 @@ export async function extract<T>(
 
   for (let subj of subjects) {
     try {
+      console.log("Extracting subject", subj.value);
       const quads = await extractor.extract(
         store,
         subj,
         new NamedNode("http://example.org/Shape"),
       );
+      console.log(
+        new Writer().quadsToString(
+          quads
+          //   .filter(
+          //   (q) =>
+          //     !q.predicate.value.startsWith("http://omeka.org/s/vocabs/o#"),
+          // ),
+        ),
+      );
 
       const relatedItems = quads.filter(
         (x) =>
           x.subject.equals(subj) &&
-          x.predicate.value === "http://www.loc.gov/mods/rdf/v1#relatedItem",
+          x.predicate.value === "http://www.loc.gov/mods/rdf/v1#identifier",
       );
       for (let quad of relatedItems) {
         const cont = { quads, id: quad.subject };
