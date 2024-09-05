@@ -5,6 +5,21 @@
 @prefix sh: <http://www.w3.org/ns/shacl#>.
 
 [ ] a sh:NodeShape;
+  sh:targetClass <DeviceShape>;
+  sh:property [
+    sh:name "id";
+    sh:path ( );
+    sh:datatype xsd:iri;
+    sh:minCount 1;
+    sh:maxCount 1;
+  ], [
+    sh:name "title";
+    sh:path dcterms:title;
+    sh:datatype xsd:string;
+    sh:maxCount 1;
+  ].
+
+[ ] a sh:NodeShape;
   sh:targetClass <SensorShape>;
   sh:property [
     sh:name "id";
@@ -33,7 +48,7 @@
     sh:maxCount 1;
   ], [
     sh:name "id";
-    sh:path ();
+    sh:path ( );
     sh:datatype xsd:iri;
     sh:maxCount 1;
   ], [
@@ -77,6 +92,10 @@
     sh:name "hosts";
     sh:path sosa:hosts;
     sh:class <SensorShape>;
+  ], [
+    sh:name "devices";
+    sh:path dcterms:hasPart ;
+    sh:class <DeviceShape>;
   ], [
     sh:name "location";
     sh:path cidoc:P55_has_current_location;

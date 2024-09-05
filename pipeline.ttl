@@ -95,19 +95,6 @@ ex:Measurement a sh:NodeShape;
             sh:path rdf:type;
             sh:minCount 1;
           ] ];
-        ], [
-          sh:path cidoc:P55_has_current_location;
-          sh:minCount 1;
-          sh:node [
-            a sh:NodeShape;
-            sh:property [
-              sh:path rdf:type;
-              sh:minCount 1;
-            ], [
-              sh:path <http://purl.org/dc/terms/isPartOf>;
-              sh:node ex:Location;
-            ];
-          ];
         ];
       ];
       sh:minCount 1;
@@ -182,8 +169,8 @@ ex:Measurement a sh:NodeShape;
     js:data "DATA";
     js:index "INDEX";
     js:metadata "META";
-    # js:url "mongodb://127.0.0.1:27017/mumotest";
-    js:url "mongodb://mongodb:27017/mumotest";
+    js:url "mongodb://127.0.0.1:27017/mumotest";
   ].
 
+# js:url "mongodb://mongodb:27017/mumotest";
 # js:url "mongodb://mongodb:27017/mumotest";

@@ -6,6 +6,7 @@
     "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "node",
+"declarationMap": true,
     "typeRoots": [
       "node_modules/@types",
       "src/types"
