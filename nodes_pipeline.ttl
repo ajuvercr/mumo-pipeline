@@ -1,0 +1,121 @@
+@prefix ex: <http://example.org/>.
+@prefix cidoc: <http://www.cidoc-crm.org/cidoc-crm/>.
+@prefix sosa: <http://www.w3.org/ns/sosa/>.
+@prefix dcterms: <http://purl.org/dc/terms/>.
+@prefix sh: <http://www.w3.org/ns/shacl#>.
+@prefix tree: <https://w3id.org/tree#>.
+@prefix rml: <http://w3id.org/rml/>.
+@prefix js: <https://w3id.org/conn/js#>.
+@prefix ws: <https://w3id.org/conn/ws#>.
+@prefix : <https://w3id.org/conn#>.
+@prefix owl: <http://www.w3.org/2002/07/owl#>.
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix rml: <https://w3id.org/conn/rml#>.
+@prefix ql: <http://semweb.mmlab.be/ns/ql#>.
+
+<> owl:imports <./node_modules/@rdfc/js-runner/ontology.ttl>.
+<> owl:imports <./node_modules/@rdfc/js-runner/channels/file.ttl>.
+<> owl:imports <./node_modules/@rdfc/js-runner/channels/http.ttl>.
+<> owl:imports <./proc/fetch.ttl>.
+<> owl:imports <./proc/mumo_nodes.ttl>.
+<> owl:imports <./node_modules/@rdfc/sds-processors-ts/configs/bucketizer.ttl>.
+<> owl:imports <./node_modules/@rdfc/sds-processors-ts/configs/ldesify.ttl>.
+<> owl:imports <./node_modules/@rdfc/sds-processors-ts/configs/sdsify.ttl>.
+<> owl:imports <./node_modules/@rdfc/sds-storage-writer-ts/processor.ttl>.
+<> owl:imports <./shape.ttl>.
+<ttl/writer> a js:JsWriterChannel.
+<ttl/reader> a js:JsReaderChannel.
+[ ] a :Channel, js:JsChannel;
+  :reader <ttl/reader>;
+  :writer <ttl/writer>.
+
+<sds-raw/writer> a js:JsWriterChannel.
+<sds-raw/reader> a js:JsReaderChannel.
+[ ] a :Channel, js:JsChannel;
+  :reader <sds-raw/reader>;
+  :writer <sds-raw/writer>.
+
+<ldes-raw/writer> a js:JsWriterChannel.
+<ldes-raw/reader> a js:JsReaderChannel.
+[ ] a :Channel, js:JsChannel;
+  :reader <ldes-raw/reader>;
+  :writer <ldes-raw/writer>.
+
+<raw/buckets/writer> a js:JsWriterChannel.
+<raw/buckets/reader> a js:JsReaderChannel.
+[ ] a :Channel, js:JsChannel;
+  :reader <raw/buckets/reader>;
+  :writer <raw/buckets/writer>.
+
+<meta/buckets/writer> a js:JsWriterChannel.
+<meta/buckets/reader> a js:JsReaderChannel.
+[ ] a :Channel, js:JsChannel;
+  :reader <meta/buckets/reader>;
+  :writer <meta/buckets/writer>.
+
+[ ] a js:MumoSource;
+  js:dataOutput <ttl/writer>.
+
+[ ] a js:Sdsify;
+  js:input <ttl/reader>;
+  js:output <sds-raw/writer>;
+  js:objectType <http://www.w3.org/ns/sosa/Platform>;
+  js:typeFilter <http://www.w3.org/ns/sosa/Platform>;
+  js:stream <https://w3id.org/sds#Stream>;
+  js:shape """
+@prefix sosa: <http://www.w3.org/ns/sosa/>.
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix sh: <http://www.w3.org/ns/shacl#>.
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
+@prefix foaf: <http://xmlns.com/foaf/0.1/>.
+@prefix ex: <http://example.org/>.
+@prefix cidoc: <http://www.cidoc-crm.org/cidoc-crm/>.
+
+# http://www.cidoc-crm.org/cidoc-crm/P53_has_former_or_current_location
+ex:SensorShape a sh:NodeShape;
+  sh:property [
+    sh:path sosa:hosts;
+    sh:node [ sh:property [ sh:path rdf:type ] ];
+  ].
+""".
+
+
+[ ] a js:LdesifySDS;
+  js:input <sds-raw/reader>;
+  js:output <ldes-raw/writer>;
+  js:statePath <./ldesState.json>;
+  js:targetStream <https://w3id.org/ldes#Stream>.
+
+<metadata/in> a :FileReaderChannel;
+  :fileReadFirstContent "true";
+  :fileOnReplace "true";
+  :filePath <./metadataIn.ttl>.
+
+[ ] a js:Bucketize;
+  js:channels [
+    js:dataInput <ldes-raw/reader>;
+    js:metadataInput <metadata/in>;
+    js:dataOutput <raw/buckets/writer>;
+    js:metadataOutput <meta/buckets/writer>;
+  ];
+  js:bucketizeStrategy ( [
+    a tree:PageFragmentation;
+    tree:pageSize 20;
+  ] );
+  js:savePath <./buckets_nodes_save.json>;
+  js:outputStreamId <https://example.org/nodes#>.
+
+[ ] a js:Ingest;
+  # js:dataInput <sds-raw/reader>;
+  # js:metadataInput <metadata/in>;
+  js:dataInput <raw/buckets/reader>;
+  js:metadataInput <meta/buckets/reader>;
+  js:database [
+    js:data "DATA";
+    js:index "INDEX";
+    js:metadata "META";
+    js:url "mongodb://127.0.0.1:27017/mumoNodes";
+  ].
+
+# js:url "mongodb://mongodb:27017/mumoNodes";

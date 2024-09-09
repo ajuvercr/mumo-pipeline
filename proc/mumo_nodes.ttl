@@ -1,0 +1,49 @@
+@prefix js: <https://w3id.org/conn/js#>.
+@prefix fno: <https://w3id.org/function/ontology#>.
+@prefix fnom: <https://w3id.org/function/vocabulary/mapping#>.
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
+@prefix : <https://w3id.org/conn#>.
+@prefix sh: <http://www.w3.org/ns/shacl#>.
+@prefix owl: <http://www.w3.org/2002/07/owl#>.
+
+js:MumoSource a js:JsProcess;
+  js:file <../lib/src/nodes_source.js>;
+  js:function "source";
+  js:location <../>;
+  js:mapping [
+    a fno:Mapping;
+    fno:parameterMapping [
+      a fnom:PositionParameterMapping;
+      fnom:functionParameter "data output";
+      fnom:implementationParameterPosition "0"^^xsd:int;
+    ], [
+      a fnom:PositionParameterMapping;
+      fnom:functionParameter "interval";
+      fnom:implementationParameterPosition "1"^^xsd:int;
+    ], [
+      a fnom:PositionParameterMapping;
+      fnom:functionParameter "api";
+      fnom:implementationParameterPosition "2"^^xsd:int;
+    ];
+  ].
+
+[ ] a sh:NodeShape;
+  sh:targetClass js:MumoSource;
+  sh:property [
+    sh:class :WriterChannel;
+    sh:path js:dataOutput;
+    sh:name "data output";
+    sh:maxCount 1;
+    sh:minCount 1;
+  ], [
+    sh:datatype xsd:integer;
+    sh:path js:interval;
+    sh:name "interval";
+    sh:maxCount 1;
+  ], [
+    sh:datatype xsd:string;
+    sh:path js:api;
+    sh:name "api";
+    sh:maxCount 1;
+  ].
+
