@@ -292,14 +292,11 @@ async function do_transform(
       const valueIdx = SensorDevices[0].channels.indexOf(alias[key]);
       if (valueIdx >= 0) {
         console.log("Doing key", key, "with idx", valueIdx, payload[key]);
-        const channel = await instance.get_sensor(
-          valueIdx,
-          0,
-          data.uplink_message.settings.timestamp,
-        );
+        const time = new Date(data.received_at).getTime();
+        const channel = await instance.get_sensor(valueIdx, 0, time);
         dataPoints.push({
           channel,
-          time: data.uplink_message.settings.timestamp,
+          time,
           value: payload[key],
         });
       }

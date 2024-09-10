@@ -15,16 +15,16 @@
 @prefix ql: <http://semweb.mmlab.be/ns/ql#>.
 @prefix rdfl: <https://w3id.org/rdf-lens/ontology#>.
 
-<> owl:imports <./node_modules/@rdfc/js-runner/ontology.ttl>.
-<> owl:imports <./node_modules/@rdfc/js-runner/channels/file.ttl>.
-<> owl:imports <./node_modules/@rdfc/js-runner/channels/http.ttl>.
-<> owl:imports <./proc/fetch.ttl>.
-<> owl:imports <./proc/mumo_mapper.ttl>.
-<> owl:imports <./node_modules/@rdfc/sds-processors-ts/configs/bucketizer.ttl>.
-<> owl:imports <./node_modules/@rdfc/sds-processors-ts/configs/shapify.ttl>.
-<> owl:imports <./node_modules/@rdfc/sds-processors-ts/configs/sdsify.ttl>.
-<> owl:imports <./node_modules/@rdfc/sds-storage-writer-ts/processor.ttl>.
-<> owl:imports <./shape.ttl>.
+<> owl:imports <../node_modules/@rdfc/js-runner/ontology.ttl>.
+<> owl:imports <../node_modules/@rdfc/js-runner/channels/file.ttl>.
+<> owl:imports <../node_modules/@rdfc/js-runner/channels/http.ttl>.
+<> owl:imports <../proc/fetch.ttl>.
+<> owl:imports <../proc/mumo_mapper.ttl>.
+<> owl:imports <../node_modules/@rdfc/sds-processors-ts/configs/bucketizer.ttl>.
+<> owl:imports <../node_modules/@rdfc/sds-processors-ts/configs/shapify.ttl>.
+<> owl:imports <../node_modules/@rdfc/sds-processors-ts/configs/sdsify.ttl>.
+<> owl:imports <../node_modules/@rdfc/sds-storage-writer-ts/processor.ttl>.
+<> owl:imports <../shape.ttl>.
 <json/writer> a js:JsWriterChannel.
 <json/reader> a js:JsReaderChannel.
 [ ] a :Channel, js:JsChannel;
