@@ -1,0 +1,16 @@
+@prefix sosa: <http://www.w3.org/ns/sosa/>.
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+@prefix sh: <http://www.w3.org/ns/shacl#>.
+@prefix dcterms: <http://purl.org/dc/terms/>.
+
+<NodeShape> a sh:NodeShape;
+  sh:property [
+    sh:path <http://www.cidoc-crm.org/cidoc-crm/P55_has_current_location>;
+    sh:node [
+      sh:closed true;
+      sh:property [ sh:path [ sh:zeroOrMorePath dcterms:isPartOf ] ];
+    ];
+  ], [
+    sh:path sosa:hosts;
+  ].
+

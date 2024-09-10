@@ -1,0 +1,39 @@
+@prefix sosa: <http://www.w3.org/ns/sosa/>.
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+@prefix sh: <http://www.w3.org/ns/shacl#>.
+@prefix dcterms: <http://purl.org/dc/terms/>.
+
+<NodeShape> a sh:NodeShape;
+  # sh:closed true;
+  sh:property [
+    sh:path <http://www.cidoc-crm.org/cidoc-crm/P55_has_current_location>;
+    sh:node [
+      # sh:closed true;
+      sh:property [ sh:path [ sh:zeroOrMorePath dcterms:isPartOf ] ];
+    ];
+  ].
+
+<ValueShape> a sh:NodeShape;
+  # sh:closed true;
+  sh:property [ sh:path rdf:type ],
+    [ sh:path <http://def.isotc211.org/iso19156/2011/Observation#OM_Observation.resultTime> ],
+    [
+      sh:path <http://def.isotc211.org/iso19156/2011/Observation#OM_Observation.result>;
+      sh:node [
+        # sh:closed true;
+        sh:property [ sh:path rdf:type ],
+          [ sh:path <http://qudt.org/1.1/schema/qudt#unit> ],
+          [ sh:path <http://qudt.org/1.1/schema/qudt#Valuet> ];
+      ];
+    ],
+    [
+      sh:path sosa:madeBySensor;
+      sh:node [
+        # sh:closed true;
+        sh:property [
+          sh:path [ sh:inversePath sosa:hosts ];
+          sh:node <NodeShape>;
+        ];
+      ];
+    ].
+

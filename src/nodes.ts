@@ -73,8 +73,6 @@ export function getShapes(): { store: RdfStore; shapes: Shapes } {
   // TODO: Change this so to use the provided nodes LDES or stay with this api, idrc
   const shape = $INLINE_FILE("../shape.ttl");
   
-  console.log("-------- shape ---------- ");
-  console.log(shape);
   const shapeTriples = new N3.Parser().parse(shape);
   const shapeStore = RdfStore.createDefault();
   shapeTriples.forEach((x) => shapeStore.addQuad(x));
@@ -101,7 +99,6 @@ export async function find_nodes(nodes: Nodes, from_cache = false) {
     "https://heron.libis.be/momu/api/items?resource_template_id[]=21&resource_template_id[]=9",
   );
 
-  console.log("Got response!");
   const data = await resp.text();
 
   await extract<Node>(

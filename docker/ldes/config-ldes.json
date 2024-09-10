@@ -70,6 +70,7 @@
             "source": {
               "@type": "LDESStore",
               "id": "http://mine.org/testing",
+              "shape": "data_shape.ttl",
               "base": {
                 "@id": "urn:solid-server:default:variable:baseUrl"
               },
@@ -79,11 +80,11 @@
               "views": [
                 {
                   "@type": "PrefixView",
-                  "prefix": "default",
+                  "prefix": "by-locaction",
                   "view": {
                     "@type": "MongoSDSView",
-                    "descriptionId": "http://localhost:3000/ldes/#customFragmentation",
-                    "streamId": "https://example.org/ns#",
+                    "descriptionId": "http://localhost:3000/ldes/#location-first",
+                    "streamId": "http://data.mumo.be/streams/buckets/1",
                     "db": {
                       "@id": "urn:solid-server:default:DBConfig"
                     }
@@ -91,13 +92,63 @@
                 },
                 {
                   "@type": "PrefixView",
-                  "prefix": "sec",
+                  "prefix": "nodes",
                   "view": {
                     "@type": "MongoSDSView",
-                    "descriptionId": "http://localhost:3000/ldes/#customFragmentation",
-                    "streamId": "https://w3id.org/sds#Stream",
+                    "descriptionId": "http://localhost:3000/ldes/#no-location",
+                    "streamId": "http://data.mumo.be/streams/buckets/2",
                     "db": {
                       "@id": "urn:solid-server:default:DBConfig"
+                    }
+                  }
+                }
+              ]
+            },
+            "options_outConverter": {
+              "@id": "urn:solid-server:default:RepresentationConverter"
+            }
+          }
+        }, 
+        {
+          "@type": "RegexRule",
+          "regex": {
+            "@id": "urn:solid-server:default:relative-path-nodes"
+          },
+          "store": {
+            "comment": "A more complex example with 3 different stores being routed to.",
+            "@type": "RepresentationConvertingStore",
+            "source": {
+              "@type": "LDESStore",
+              "id": "http://mine.org/testing",
+              "shape": "node_shape.ttl",
+              "base": {
+                "@id": "urn:solid-server:default:variable:baseUrl"
+              },
+              "relativePath": {
+                "@id": "urn:solid-server:default:relative-path-nodes"
+              },
+              "views": [
+                {
+                  "@type": "PrefixView",
+                  "prefix": "by-location",
+                  "view": {
+                    "@type": "MongoSDSView",
+                    "descriptionId": "http://localhost:3000/ldes/#location-first",
+                    "streamId": "http://data.mumo.be/streams/nodes/by-location",
+                    "db": {
+                      "@id": "urn:solid-server:default:DBConfigNodes"
+                    }
+                  }
+                },
+                {
+                  "@type": "PrefixView",
+                  "prefix": "default",
+                  "view": {
+                    "@type": "MongoSDSView",
+                    "descriptionId": "http://localhost:3000/ldes/#no-location",
+                    "streamId": "http://data.mumo.be/streams/nodes/default",
+                    "db": {
+                      "@id": "urn:solid-server:default:DBConfigNodes"
                     }
                   }
                 }
@@ -132,11 +183,23 @@
       "metaCollection": "META",
       "indexCollection": "INDEX",
       "membersCollection": "DATA",
-      "dbUrl": "mongodb://mongodb:27017/mumotest"
+      "dbUrl": "mongodb://mongodb:27017/data"
+    },
+    {
+      "@id": "urn:solid-server:default:DBConfigNodes",
+      "@type": "DBConfig",
+      "metaCollection": "META",
+      "indexCollection": "INDEX",
+      "membersCollection": "DATA",
+      "dbUrl": "mongodb://mongodb:27017/nodes"
     },
     {
       "@id": "urn:solid-server:default:relative-path",
       "valueRaw": "/ldes/"
+    },
+    {
+      "@id": "urn:solid-server:default:relative-path-nodes",
+      "valueRaw": "/nodes/"
     },
     {
       "@id": "urn:solid-server:default:FileResourceStore",

@@ -1,3 +1,4 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
 @prefix ex: <http://example.org/>.
 @prefix cidoc: <http://www.cidoc-crm.org/cidoc-crm/>.
 @prefix sosa: <http://www.w3.org/ns/sosa/>.
@@ -12,6 +13,7 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
 @prefix rml: <https://w3id.org/conn/rml#>.
 @prefix ql: <http://semweb.mmlab.be/ns/ql#>.
+@prefix rdfl: <https://w3id.org/rdf-lens/ontology#>.
 
 <> owl:imports <./node_modules/@rdfc/js-runner/ontology.ttl>.
 <> owl:imports <./node_modules/@rdfc/js-runner/channels/file.ttl>.
@@ -19,6 +21,7 @@
 <> owl:imports <./proc/fetch.ttl>.
 <> owl:imports <./proc/mumo_mapper.ttl>.
 <> owl:imports <./node_modules/@rdfc/sds-processors-ts/configs/bucketizer.ttl>.
+<> owl:imports <./node_modules/@rdfc/sds-processors-ts/configs/shapify.ttl>.
 <> owl:imports <./node_modules/@rdfc/sds-processors-ts/configs/sdsify.ttl>.
 <> owl:imports <./node_modules/@rdfc/sds-storage-writer-ts/processor.ttl>.
 <> owl:imports <./shape.ttl>.
@@ -40,17 +43,41 @@
   :reader <sds-raw/reader>;
   :writer <sds-raw/writer>.
 
-<raw/buckets/writer> a js:JsWriterChannel.
-<raw/buckets/reader> a js:JsReaderChannel.
+<raw/buckets-1/writer> a js:JsWriterChannel.
+<raw/buckets-1/reader> a js:JsReaderChannel.
 [ ] a :Channel, js:JsChannel;
-  :reader <raw/buckets/reader>;
-  :writer <raw/buckets/writer>.
+  :reader <raw/buckets-1/reader>;
+  :writer <raw/buckets-1/writer>.
 
-<meta/buckets/writer> a js:JsWriterChannel.
-<meta/buckets/reader> a js:JsReaderChannel.
+<meta/buckets-1/writer> a js:JsWriterChannel.
+<meta/buckets-1/reader> a js:JsReaderChannel.
 [ ] a :Channel, js:JsChannel;
-  :reader <meta/buckets/reader>;
-  :writer <meta/buckets/writer>.
+  :reader <meta/buckets-1/reader>;
+  :writer <meta/buckets-1/writer>.
+
+<shaped-1/writer> a js:JsWriterChannel.
+<shaped-1/reader> a js:JsReaderChannel.
+[ ] a :Channel, js:JsChannel;
+  :reader <shaped-1/reader>;
+  :writer <shaped-1/writer>.
+
+<raw/buckets-2/writer> a js:JsWriterChannel.
+<raw/buckets-2/reader> a js:JsReaderChannel.
+[ ] a :Channel, js:JsChannel;
+  :reader <raw/buckets-2/reader>;
+  :writer <raw/buckets-2/writer>.
+
+<meta/buckets-2/writer> a js:JsWriterChannel.
+<meta/buckets-2/reader> a js:JsReaderChannel.
+[ ] a :Channel, js:JsChannel;
+  :reader <meta/buckets-2/reader>;
+  :writer <meta/buckets-2/writer>.
+
+<shaped-2/writer> a js:JsWriterChannel.
+<shaped-2/reader> a js:JsReaderChannel.
+[ ] a :Channel, js:JsChannel;
+  :reader <shaped-2/reader>;
+  :writer <shaped-2/writer>.
 
 [ ] a js:MumoFetch;
   js:startUrl "https://mumo.ilabt.imec.be/ingest/?key=mumo-is-cool&index=0";
@@ -68,7 +95,7 @@
   js:objectType <http://def.isotc211.org/iso19156/2011/Observation#OM_Observation>;
   js:timestampPath <http://def.isotc211.org/iso19156/2011/Observation#OM_Observation.resultTime>;
   js:typeFilter <http://def.isotc211.org/iso19156/2011/Observation#OM_Observation>;
-  js:stream <https://w3id.org/sds#Stream>;
+  js:stream <http://data.mumo.be/streams/sds>;
   js:shape """
 @prefix sosa: <http://www.w3.org/ns/sosa/>.
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
@@ -111,17 +138,9 @@ ex:Measurement a sh:NodeShape;
   js:channels [
     js:dataInput <sds-raw/reader>;
     js:metadataInput <metadata/in>;
-    js:dataOutput <raw/buckets/writer>;
-    js:metadataOutput <meta/buckets/writer>;
+    js:dataOutput <raw/buckets-1/writer>;
+    js:metadataOutput <meta/buckets-1/writer>;
   ];
-  # js:bucketizeStrategy ( [
-  #   a tree:TimebasedFragmentation;
-  #   tree:timestampPath <http://def.isotc211.org/iso19156/2011/Observation#OM_Observation.resultTime>;
-  #   tree:maxSize 10;
-  #   tree:k 4;
-  #   tree:minBucketSpan 3600;
-  # ] );
-  # In seconds
   js:bucketizeStrategy ( [
     a tree:SubjectFragmentation;
     tree:fragmentationPath (
@@ -157,20 +176,115 @@ ex:Measurement a sh:NodeShape;
     tree:k 4;
     tree:minBucketSpan 3600;
   ] );
-  js:savePath <./buckets_save.json>;
-  js:outputStreamId <https://example.org/ns#>.
+  js:savePath <./buckets_save_1.json>;
+  js:outputStreamId <http://data.mumo.be/streams/buckets/1>.
+
+[ ] a js:Shapify;
+  js:input <raw/buckets-1/reader>;
+  js:output <shaped-1/writer>;
+  js:shape <ValueShape>.
 
 [ ] a js:Ingest;
   # js:dataInput <sds-raw/reader>;
   # js:metadataInput <metadata/in>;
-  js:dataInput <raw/buckets/reader>;
-  js:metadataInput <meta/buckets/reader>;
+  js:dataInput <shaped-1/reader>;
+  js:metadataInput <meta/buckets-1/reader>;
   js:database [
     js:data "DATA";
     js:index "INDEX";
     js:metadata "META";
-    js:url "mongodb://127.0.0.1:27017/mumotest";
+    js:url [
+      a rdfl:EnvVariable;
+      rdfl:envDefault "mongodb://127.0.0.1:27017/mumotest";
+      rdfl:envKey "MONGO";
+    ];
   ].
 
-# js:url "mongodb://mongodb:27017/mumotest";
-# js:url "mongodb://mongodb:27017/mumotest";
+[ ] a js:Bucketize;
+  js:channels [
+    js:dataInput <sds-raw/reader>;
+    js:metadataInput <metadata/in>;
+    js:dataOutput <raw/buckets-2/writer>;
+    js:metadataOutput <meta/buckets-2/writer>;
+  ];
+  js:bucketizeStrategy (  [
+    a tree:SubjectFragmentation;
+    tree:fragmentationPath ( sosa:madeBySensor [ sh:inversePath sosa:hosts ] );
+    tree:fragmentationDefaultName "unknown";
+    tree:fragmentationPathName dcterms:title;
+  ] [
+    a tree:SubjectFragmentation;
+    tree:fragmentationPath (
+      <http://def.isotc211.org/iso19156/2011/Observation#OM_Observation.result>
+      <http://qudt.org/1.1/schema/qudt#unit>
+    );
+    tree:fragmentationDefaultName "unknown";
+    tree:fragmentationPathName (
+      [ sh:inversePath <http://qudt.org/1.1/schema/qudt#unit> ]
+      [ sh:inversePath <http://def.isotc211.org/iso19156/2011/Observation#OM_Observation.result> ]
+      sosa:madeBySensor
+      sosa:observes
+    );
+  ] [
+    a tree:TimebasedFragmentation;
+    tree:timestampPath <http://def.isotc211.org/iso19156/2011/Observation#OM_Observation.resultTime>;
+    tree:maxSize 10;
+    tree:k 4;
+    tree:minBucketSpan 3600;
+  ] );
+  js:savePath <./buckets_save_2.json>;
+  js:outputStreamId <http://data.mumo.be/streams/buckets/2>.
+
+[ ] a js:Shapify;
+  js:input <raw/buckets-2/reader>;
+  js:output <shaped-2/writer>;
+  js:shape <ValueShape>.
+
+[ ] a js:Ingest;
+  js:dataInput <shaped-2/reader>;
+  js:metadataInput <meta/buckets-2/reader>;
+  js:database [
+    js:data "DATA";
+    js:index "INDEX";
+    js:metadata "META";
+    js:url [
+      a rdfl:EnvVariable;
+      rdfl:envDefault "mongodb://127.0.0.1:27017/mumotest";
+      rdfl:envKey "MONGO";
+    ];
+  ].
+
+<NodeShape> a sh:NodeShape;
+  sh:closed true;
+  sh:property [
+    sh:path <http://www.cidoc-crm.org/cidoc-crm/P55_has_current_location>;
+    sh:node [
+      sh:closed true;
+      sh:property [ sh:path [ sh:zeroOrMorePath dcterms:isPartOf ] ];
+    ];
+  ].
+
+<ValueShape> a sh:NodeShape;
+  sh:closed true;
+  sh:property [ sh:path rdf:type ],
+    [ sh:path <http://def.isotc211.org/iso19156/2011/Observation#OM_Observation.resultTime> ],
+    [
+      sh:path <http://def.isotc211.org/iso19156/2011/Observation#OM_Observation.result>;
+      sh:node [
+        sh:closed true;
+        sh:property [ sh:path rdf:type ],
+          [ sh:path <http://qudt.org/1.1/schema/qudt#unit> ],
+          [ sh:path <http://qudt.org/1.1/schema/qudt#Valuet> ];
+      ];
+    ],
+    [
+      sh:path sosa:madeBySensor;
+      sh:node [
+        sh:closed true;
+        sh:property [
+          sh:path [ sh:inversePath sosa:hosts ];
+          sh:node <NodeShape>;
+        ];
+      ];
+    ].
+
