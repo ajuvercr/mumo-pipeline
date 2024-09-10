@@ -16,8 +16,8 @@ services:
       context: ..
       dockerfile: ./docker/pipeline.yml
     volumes:
-      - ..:/workspace      
-    command: /workspace/data_pipeline.ttl
+      - ../data:/workspace/data
+    command: /workspace/data/data_pipeline.ttl
     networks:
     - ldes
     depends_on:
@@ -31,8 +31,8 @@ services:
       context: ..
       dockerfile: ./docker/pipeline.yml
     volumes:
-      - ..:/workspace      
-    command: /workspace/nodes_pipeline.ttl
+      - ../nodes:/workspace/nodes
+    command: /workspace/nodes/nodes_pipeline.ttl
     networks:
     - ldes
     depends_on:
@@ -44,7 +44,6 @@ services:
       dockerfile: ./Dockerfile
     volumes:
       - ./ldes/data:/ldes-solid-server/data
-      - ./ldes/node_modules:/ldes-solid-server/node_modules
     command: -f ./data -b http://localhost:3000
     networks:
       - ldes
