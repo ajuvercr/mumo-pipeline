@@ -15,8 +15,6 @@ async function once(
     for (const node of Object.values(nodes)) {
       const quads = await node.node.getQuads(true, false);
       const quads_str = new N3Writer().quadsToString(quads);
-      console.log(" ===== Found Node =====");
-      console.log(quads_str);
       await writer.push(quads_str);
     }
 

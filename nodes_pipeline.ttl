@@ -12,6 +12,7 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
 @prefix rml: <https://w3id.org/conn/rml#>.
 @prefix ql: <http://semweb.mmlab.be/ns/ql#>.
+@prefix rdfl: <https://w3id.org/rdf-lens/ontology#>.
 
 <> owl:imports <./node_modules/@rdfc/js-runner/ontology.ttl>.
 <> owl:imports <./node_modules/@rdfc/js-runner/channels/file.ttl>.
@@ -41,17 +42,29 @@
   :reader <ldes-raw/reader>;
   :writer <ldes-raw/writer>.
 
-<raw/buckets/writer> a js:JsWriterChannel.
-<raw/buckets/reader> a js:JsReaderChannel.
+<raw/buckets-1/writer> a js:JsWriterChannel.
+<raw/buckets-1/reader> a js:JsReaderChannel.
 [ ] a :Channel, js:JsChannel;
-  :reader <raw/buckets/reader>;
-  :writer <raw/buckets/writer>.
+  :reader <raw/buckets-1/reader>;
+  :writer <raw/buckets-1/writer>.
 
-<meta/buckets/writer> a js:JsWriterChannel.
-<meta/buckets/reader> a js:JsReaderChannel.
+<meta/buckets-1/writer> a js:JsWriterChannel.
+<meta/buckets-1/reader> a js:JsReaderChannel.
 [ ] a :Channel, js:JsChannel;
-  :reader <meta/buckets/reader>;
-  :writer <meta/buckets/writer>.
+  :reader <meta/buckets-1/reader>;
+  :writer <meta/buckets-1/writer>.
+
+<raw/buckets-2/writer> a js:JsWriterChannel.
+<raw/buckets-2/reader> a js:JsReaderChannel.
+[ ] a :Channel, js:JsChannel;
+  :reader <raw/buckets-2/reader>;
+  :writer <raw/buckets-2/writer>.
+
+<meta/buckets-2/writer> a js:JsWriterChannel.
+<meta/buckets-2/reader> a js:JsReaderChannel.
+[ ] a :Channel, js:JsChannel;
+  :reader <meta/buckets-2/reader>;
+  :writer <meta/buckets-2/writer>.
 
 [ ] a js:MumoSource;
   js:dataOutput <ttl/writer>.
@@ -61,7 +74,7 @@
   js:output <sds-raw/writer>;
   js:objectType <http://www.w3.org/ns/sosa/Platform>;
   js:typeFilter <http://www.w3.org/ns/sosa/Platform>;
-  js:stream <https://w3id.org/sds#Stream>;
+  js:stream <http://data.mumo.be/streams/nodes/sds>;
   js:shape """
 @prefix sosa: <http://www.w3.org/ns/sosa/>.
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
@@ -80,12 +93,11 @@ ex:SensorShape a sh:NodeShape;
   ].
 """.
 
-
 [ ] a js:LdesifySDS;
   js:input <sds-raw/reader>;
   js:output <ldes-raw/writer>;
   js:statePath <./ldesState.json>;
-  js:targetStream <https://w3id.org/ldes#Stream>.
+  js:targetStream <http://data.mumo.be/streams/nodes/ldes>.
 
 <metadata/in> a :FileReaderChannel;
   :fileReadFirstContent "true";
@@ -96,26 +108,70 @@ ex:SensorShape a sh:NodeShape;
   js:channels [
     js:dataInput <ldes-raw/reader>;
     js:metadataInput <metadata/in>;
-    js:dataOutput <raw/buckets/writer>;
-    js:metadataOutput <meta/buckets/writer>;
+    js:dataOutput <raw/buckets-1/writer>;
+    js:metadataOutput <meta/buckets-1/writer>;
   ];
   js:bucketizeStrategy ( [
-    a tree:PageFragmentation;
-    tree:pageSize 20;
+    a tree:SubjectFragmentation;
+    tree:fragmentationPath <http://purl.org/dc/terms/isVersionOf>;
+    tree:fragmentationDefaultName "unknown";
+    tree:fragmentationPathName dcterms:title;
   ] );
-  js:savePath <./buckets_nodes_save.json>;
-  js:outputStreamId <https://example.org/nodes#>.
+  js:savePath <./buckets_nodes_save-1.json>;
+  js:outputStreamId <http://data.mumo.be/streams/nodes/default>.
+
+[ ] a js:Bucketize;
+  js:channels [
+    js:dataInput <ldes-raw/reader>;
+    js:metadataInput <metadata/in>;
+    js:dataOutput <raw/buckets-2/writer>;
+    js:metadataOutput <meta/buckets-2/writer>;
+  ];
+  js:bucketizeStrategy ( [
+    a tree:SubjectFragmentation;
+    tree:fragmentationPath (
+      <http://purl.org/dc/terms/isVersionOf>
+      cidoc:P55_has_current_location
+      [ sh:zeroOrMorePath dcterms:isPartOf ]
+    );
+    tree:fragmentationDefaultName "unlocated";
+    tree:fragmentationPathName dcterms:title;
+  ] [
+    a tree:SubjectFragmentation;
+    tree:fragmentationPath <http://purl.org/dc/terms/isVersionOf>;
+    tree:fragmentationDefaultName "unknown";
+    tree:fragmentationPathName dcterms:title;
+  ] );
+  js:savePath <./buckets_nodes_save-2.json>;
+  js:outputStreamId <http://data.mumo.be/streams/nodes/by-location>.
 
 [ ] a js:Ingest;
-  # js:dataInput <sds-raw/reader>;
-  # js:metadataInput <metadata/in>;
-  js:dataInput <raw/buckets/reader>;
-  js:metadataInput <meta/buckets/reader>;
+  js:dataInput <raw/buckets-1/reader>;
+  js:metadataInput <meta/buckets-1/reader>;
   js:database [
     js:data "DATA";
     js:index "INDEX";
     js:metadata "META";
-    js:url "mongodb://127.0.0.1:27017/mumoNodes";
+    js:url [
+      a rdfl:EnvVariable;
+      rdfl:envDefault "mongodb://127.0.0.1:27017/nodes";
+      rdfl:envKey "MONGO";
+    ];
+  ].
+
+
+[ ] a js:Ingest;
+  js:dataInput <raw/buckets-2/reader>;
+  js:metadataInput <meta/buckets-2/reader>;
+  js:database [
+    js:data "DATA";
+    js:index "INDEX";
+    js:metadata "META";
+    js:url [
+      a rdfl:EnvVariable;
+      rdfl:envDefault "mongodb://127.0.0.1:27017/nodes";
+      rdfl:envKey "MONGO";
+    ];
   ].
 
 # js:url "mongodb://mongodb:27017/mumoNodes";

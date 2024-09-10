@@ -91,7 +91,6 @@ export async function extract<T>(
     const nquads = await jsonld.toRDF(JSON.parse(json), {
       format: "application/n-quads",
     });
-    console.log("nquads", nquads);
     quads = new Parser().parse(nquads);
   }
 
@@ -115,20 +114,10 @@ export async function extract<T>(
 
   for (let subj of subjects) {
     try {
-      console.log("Extracting subject", subj.value);
       const quads = await extractor.extract(
         store,
         subj,
         new NamedNode("http://example.org/Shape"),
-      );
-      console.log(
-        new Writer().quadsToString(
-          quads
-          //   .filter(
-          //   (q) =>
-          //     !q.predicate.value.startsWith("http://omeka.org/s/vocabs/o#"),
-          // ),
-        ),
       );
 
       const relatedItems = quads.filter(
@@ -147,37 +136,3 @@ export async function extract<T>(
   }
 }
 
-//
-// async function main() {
-//   const shape = await readFile("./shape.ttl", { encoding: "utf8" });
-//   const shapeTriples = new Parser().parse(shape);
-//   const shapeStore = RdfStore.createDefault();
-//   shapeTriples.forEach((x) => shapeStore.addQuad(x));
-//
-//   const shapes = get_shapes();
-//
-//   const resp = await fetch(
-//     "https://heron.libis.be/momu-test/api/items?property[0][joiner]=and&property[0][property][]=820&property[0][type]=in&property[0][text]=mumo",
-//   );
-//   const data = await resp.text();
-//   await extract<Node>(data, shapeStore, shapes.lenses["NodeShape"], (x) =>
-//     console.log("item", x),
-//   );
-//
-//   // const start = await fetcher(
-//   //   new SimpleStream<string>().on("data", (page) => {
-//   //     return extract<Node>(
-//   //       page,
-//   //       shapeStore,
-//   //       shapes.lenses["NodeShape"],
-//   //       (item) => {
-//   //         console.log("item", item);
-//   //       },
-//   //     );
-//   //   }),
-//   //   "https://heron.libis.be/momu-test/api/items?sort_by=id&sort_order=asc&page=0",
-//   // );
-//   // start();
-// }
-//
-// main();

@@ -8,15 +8,31 @@ services:
     networks:
     - ldes
 
-  pipeline:
+  data_pipeline:
     environment:
       DEBUG: "*"
+      MONGO: "mongodb://mongodb:27017/data"
     build: 
       context: ..
       dockerfile: ./docker/pipeline.yml
     volumes:
       - ..:/workspace      
-    command: /workspace/pipeline.ttl
+    command: /workspace/data_pipeline.ttl
+    networks:
+    - ldes
+    depends_on:
+    - mongodb
+
+  nodes_pipeline:
+    environment:
+      DEBUG: "*"
+      MONGO: "mongodb://mongodb:27017/nodes"
+    build: 
+      context: ..
+      dockerfile: ./docker/pipeline.yml
+    volumes:
+      - ..:/workspace      
+    command: /workspace/nodes_pipeline.ttl
     networks:
     - ldes
     depends_on:
@@ -28,7 +44,8 @@ services:
       dockerfile: ./Dockerfile
     volumes:
       - ./ldes/data:/ldes-solid-server/data
-    command: -f ./data
+      - ./ldes/node_modules:/ldes-solid-server/node_modules
+    command: -f ./data -b http://localhost:3000
     networks:
       - ldes
     depends_on:
