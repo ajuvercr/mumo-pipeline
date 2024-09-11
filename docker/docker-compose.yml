@@ -10,7 +10,6 @@ services:
 
   data_pipeline:
     environment:
-      DEBUG: "*"
       MONGO: "mongodb://mongodb:27017/data"
     build: 
       context: ..
@@ -25,7 +24,6 @@ services:
 
   nodes_pipeline:
     environment:
-      DEBUG: "*"
       MONGO: "mongodb://mongodb:27017/nodes"
     build: 
       context: ..
