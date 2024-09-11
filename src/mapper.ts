@@ -199,7 +199,6 @@ class TransformInstance {
     ts: number,
   ): Promise<Item<OmekaChannel>> {
     const channelName = SensorDevices[deviceIdx].channels[channelIdx];
-    console.log("channel name", channelName);
     const propertyType = getType(channelName);
     const thisDevice = await this.get_device(deviceIdx, ts);
     const thisDeviceIdx = thisDevice.idx;
@@ -278,7 +277,6 @@ async function do_transform(
   if (payload_is_new_version(payload)) {
     for (const mg of payload.measurementGroups) {
       for (const g of mg.measurements) {
-        console.log("Getting sensor", g.deviceIndex + 1, g.channelIndex);
         const channel = await instance.get_sensor(
           g.channelIndex,
           g.deviceIndex + 1,
@@ -291,7 +289,6 @@ async function do_transform(
     for (const key of Object.keys(payload)) {
       const valueIdx = SensorDevices[0].channels.indexOf(alias[key]);
       if (valueIdx >= 0) {
-        console.log("Doing key", key, "with idx", valueIdx, payload[key]);
         const time = new Date(data.received_at).getTime();
         const channel = await instance.get_sensor(valueIdx, 0, time);
         dataPoints.push({
@@ -315,7 +312,7 @@ async function do_transform(
 
     const writer = new N3.Writer();
     const output = writer.quadsToString(obj);
-    console.log("Quads", obj.length);
+    console.log("Quads", obj.length, dp.time, new Date(dp.time).toISOString());
     strings.push(output);
   }
 
@@ -333,13 +330,11 @@ export async function transform(
   // await find_nodes(nodes);
   await setup_nodes(nodes, omeka);
   setInterval(() => setup_nodes(nodes, omeka), 60000);
-  console.log("EUids", Object.keys(nodes));
 
   reader.data(async (input) => {
     try {
       const objects = await do_transform(input, nodes, omeka);
       for (let object of objects) {
-        console.log(object);
         await writer.push(object);
       }
     } catch (e: any) {
