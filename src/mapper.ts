@@ -70,13 +70,7 @@ function observation(
 
   quads.push(quad(resultId, RDF.terms.type, qudt.QuantityValue));
   quads.push(
-    quad(
-      resultId,
-      qudt.unit,
-      namedNode(
-        sensor.item["mumo_generalfeaturemodel:GF_PropertyType.definition"],
-      ),
-    ),
+    quad(resultId, qudt.unit, namedNode(sensor.item["sosa:observes"])),
   );
   quads.push(
     quad(
@@ -206,8 +200,7 @@ class TransformInstance {
     const foundChannel = asArray(this.item.node.item["sosa:hosts"]).find(
       (sensor) =>
         sensor.item["dcterms:isPartOf"].idx === thisDeviceIdx &&
-        sensor.item["mumo_generalfeaturemodel:GF_PropertyType.definition"] ===
-          propertyType,
+        sensor.item["sosa:observes"] === propertyType,
     );
     if (foundChannel) return foundChannel;
 
@@ -228,7 +221,7 @@ class TransformInstance {
     const channel = await this.omeka.channel.create(
       {
         "dcterms:isPartOf": thisDevice,
-        "mumo_generalfeaturemodel:GF_PropertyType.definition": propertyType,
+        "sosa:observes": propertyType,
         "dcterms:identifier": identifier,
         "dcterms:title": title,
       },

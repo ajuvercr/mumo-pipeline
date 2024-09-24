@@ -173,8 +173,8 @@ ex:Measurement a sh:NodeShape;
     a tree:TimebasedFragmentation;
     tree:timestampPath <http://def.isotc211.org/iso19156/2011/Observation#OM_Observation.resultTime>;
     tree:maxSize 1000;
-    tree:k 4;
-    tree:minBucketSpan 3600;
+    tree:k 8;
+    tree:minBucketSpan 86400;
   ] );
   js:savePath <./buckets_save_1.json>;
   js:outputStreamId <http://data.mumo.be/streams/buckets/1>.
@@ -229,8 +229,8 @@ ex:Measurement a sh:NodeShape;
     a tree:TimebasedFragmentation;
     tree:timestampPath <http://def.isotc211.org/iso19156/2011/Observation#OM_Observation.resultTime>;
     tree:maxSize 1000;
-    tree:k 4;
-    tree:minBucketSpan 3600;
+    tree:k 8;
+    tree:minBucketSpan 86400;
   ] );
   js:savePath <./buckets_save_2.json>;
   js:outputStreamId <http://data.mumo.be/streams/buckets/2>.

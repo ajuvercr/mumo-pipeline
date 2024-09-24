@@ -21,7 +21,7 @@ export type OmekaChannel = {
   "dcterms:title": string;
   "dcterms:isPartOf": Item<OmekaDevice>;
   "dcterms:identifier": string;
-  "mumo_generalfeaturemodel:GF_PropertyType.definition": string;
+  "sosa:observes": string;
 };
 
 export type Omeka = {
