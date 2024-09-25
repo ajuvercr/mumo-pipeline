@@ -304,8 +304,15 @@ async function do_transform(
     }
 
     const writer = new N3.Writer();
-    const output = writer.quadsToString(obj);
+    writer.addQuads(obj);
     console.log("Quads", obj.length, dp.time, new Date(dp.time).toISOString());
+    const output: string = await new Promise((resolve, reject) => {
+      writer.end((err, res) => {
+        if (err) reject(err);
+        console.log(res);
+        resolve(res);
+      });
+    });
     strings.push(output);
   }
 

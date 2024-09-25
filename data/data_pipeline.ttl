@@ -274,7 +274,7 @@ ex:Measurement a sh:NodeShape;
         sh:closed true;
         sh:property [ sh:path rdf:type ],
           [ sh:path <http://qudt.org/1.1/schema/qudt#unit> ],
-          [ sh:path <http://qudt.org/1.1/schema/qudt#Valuet> ];
+          [ sh:path <http://qudt.org/1.1/schema/qudt#numericValue> ];
       ];
     ],
     [
