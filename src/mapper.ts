@@ -1,6 +1,6 @@
 import { Quad } from "@rdfjs/types";
 import type { Stream, Writer } from "@rdfc/js-runner";
-import { getLogger, RDF, XSD } from "@treecg/types";
+import { getLogger, RDF, RDFS, XSD } from "@treecg/types";
 import * as N3 from "n3";
 import { isotc, mumoData, qudt, sosa } from "./ontologies";
 import {
@@ -45,6 +45,15 @@ export async function setup_nodes(
   }
 }
 
+function observesToLabel(observes: string): string {
+  const lastIndex = observes.lastIndexOf("#");
+  if (lastIndex != -1) {
+    return observes.substring(lastIndex + 1);
+  } else {
+    return observes;
+  }
+}
+
 function observation(
   value: number,
   time: number,
@@ -71,6 +80,13 @@ function observation(
   quads.push(quad(resultId, RDF.terms.type, qudt.QuantityValue));
   quads.push(
     quad(resultId, qudt.unit, namedNode(sensor.item["sosa:observes"])),
+  );
+  quads.push(
+    quad(
+      namedNode(sensor.item["sosa:observes"]),
+      RDFS.terms.label,
+      literal(observesToLabel(sensor.item["sosa:observes"])),
+    ),
   );
   quads.push(
     quad(
