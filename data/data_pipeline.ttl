@@ -126,6 +126,12 @@ ex:Measurement a sh:NodeShape;
       ];
       sh:minCount 1;
     ] ];
+  ], [
+    sh:path (
+      <http://def.isotc211.org/iso19156/2011/Observation#OM_Observation.result>
+      <http://qudt.org/1.1/schema/qudt#unit>
+    );
+    sh:node [];
   ].
 """.
 
@@ -163,18 +169,12 @@ ex:Measurement a sh:NodeShape;
       <http://qudt.org/1.1/schema/qudt#unit>
     );
     tree:fragmentationDefaultName "unknown";
-    tree:fragmentationPathName (
-      [ sh:inversePath <http://qudt.org/1.1/schema/qudt#unit> ]
-      [ sh:inversePath <http://def.isotc211.org/iso19156/2011/Observation#OM_Observation.result> ]
-      sosa:madeBySensor
-      sosa:observes
-    );
+    tree:fragmentationPathName rdfs:label;
   ] [
-    a tree:TimebasedFragmentation;
+    a tree:TimeBucketFragmentation;
     tree:timestampPath <http://def.isotc211.org/iso19156/2011/Observation#OM_Observation.resultTime>;
     tree:maxSize 1000;
-    tree:k 8;
-    tree:minBucketSpan 86400;
+    tree:level ( "year" "month" "day-of-month" "hour" "minute" );
   ] );
   js:savePath <./buckets_save_1.json>;
   js:outputStreamId <http://data.mumo.be/streams/buckets/1>.
@@ -185,8 +185,6 @@ ex:Measurement a sh:NodeShape;
   js:shape <ValueShape>.
 
 [ ] a js:Ingest;
-  # js:dataInput <sds-raw/reader>;
-  # js:metadataInput <metadata/in>;
   js:dataInput <shaped-1/reader>;
   js:metadataInput <meta/buckets-1/reader>;
   js:database [
@@ -207,7 +205,7 @@ ex:Measurement a sh:NodeShape;
     js:dataOutput <raw/buckets-2/writer>;
     js:metadataOutput <meta/buckets-2/writer>;
   ];
-  js:bucketizeStrategy (  [
+  js:bucketizeStrategy ( [
     a tree:SubjectFragmentation;
     tree:fragmentationPath ( sosa:madeBySensor [ sh:inversePath sosa:hosts ] );
     tree:fragmentationDefaultName "unknown";
@@ -219,18 +217,12 @@ ex:Measurement a sh:NodeShape;
       <http://qudt.org/1.1/schema/qudt#unit>
     );
     tree:fragmentationDefaultName "unknown";
-    tree:fragmentationPathName (
-      [ sh:inversePath <http://qudt.org/1.1/schema/qudt#unit> ]
-      [ sh:inversePath <http://def.isotc211.org/iso19156/2011/Observation#OM_Observation.result> ]
-      sosa:madeBySensor
-      sosa:observes
-    );
+    tree:fragmentationPathName rdfs:label;
   ] [
-    a tree:TimebasedFragmentation;
+    a tree:TimeBucketFragmentation;
     tree:timestampPath <http://def.isotc211.org/iso19156/2011/Observation#OM_Observation.resultTime>;
     tree:maxSize 1000;
-    tree:k 8;
-    tree:minBucketSpan 86400;
+    tree:level ( "year" "month" "day-of-month" "hour" "minute" );
   ] );
   js:savePath <./buckets_save_2.json>;
   js:outputStreamId <http://data.mumo.be/streams/buckets/2>.
