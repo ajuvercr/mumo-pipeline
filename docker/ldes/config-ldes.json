@@ -68,9 +68,7 @@
         },
         {
           "@type": "RegexRule",
-          "regex": {
-            "@id": "urn:solid-server:default:relative-path"
-          },
+          "regex": "^/ldes/(?!.*acl$).*$",
           "store": {
             "comment": "A more complex example with 3 different stores being routed to.",
             "@type": "RepresentationConvertingStore",
@@ -87,10 +85,10 @@
               "views": [
                 {
                   "@type": "PrefixView",
-                  "prefix": "by-locaction",
+                  "prefix": "by-location",
                   "view": {
-                    "@type": "MongoSDSView",
-                    "descriptionId": "http://localhost:3000/ldes/#location-first",
+                    "@type": "SDSView",
+                    "descriptionId": "http://somethingElse:3000/ldes/#location-first",
                     "streamId": "http://data.mumo.be/streams/buckets/1",
                     "db": {
                       "@id": "urn:solid-server:default:DBConfig"
@@ -101,8 +99,8 @@
                   "@type": "PrefixView",
                   "prefix": "nodes",
                   "view": {
-                    "@type": "MongoSDSView",
-                    "descriptionId": "http://localhost:3000/ldes/#no-location",
+                    "@type": "SDSView",
+                    "descriptionId": "http://somethingElse:3000/ldes/#location-first",
                     "streamId": "http://data.mumo.be/streams/buckets/2",
                     "db": {
                       "@id": "urn:solid-server:default:DBConfig"
@@ -118,9 +116,7 @@
         }, 
         {
           "@type": "RegexRule",
-          "regex": {
-            "@id": "urn:solid-server:default:relative-path-nodes"
-          },
+          "regex": "^/nodes/(?!.*acl$).*$",
           "store": {
             "comment": "A more complex example with 3 different stores being routed to.",
             "@type": "RepresentationConvertingStore",
@@ -139,8 +135,8 @@
                   "@type": "PrefixView",
                   "prefix": "by-location",
                   "view": {
-                    "@type": "MongoSDSView",
-                    "descriptionId": "http://localhost:3000/ldes/#location-first",
+                    "@type": "SDSView",
+                    "descriptionId": "http://somethingElse:3000/ldes/#location-first",
                     "streamId": "http://data.mumo.be/streams/nodes/by-location",
                     "db": {
                       "@id": "urn:solid-server:default:DBConfigNodes"
@@ -151,8 +147,8 @@
                   "@type": "PrefixView",
                   "prefix": "default",
                   "view": {
-                    "@type": "MongoSDSView",
-                    "descriptionId": "http://localhost:3000/ldes/#no-location",
+                    "@type": "SDSView",
+                    "descriptionId": "http://somethingElse:3000/ldes/#location-first",
                     "streamId": "http://data.mumo.be/streams/nodes/default",
                     "db": {
                       "@id": "urn:solid-server:default:DBConfigNodes"
@@ -206,7 +202,7 @@
       "metaCollection": "META",
       "indexCollection": "INDEX",
       "membersCollection": "DATA",
-      "dbUrl": "mongodb://mongodb:27017/data"
+      "dbUrl": "mongodb://localhost:27017/mumotest"
     },
     {
       "@id": "urn:solid-server:default:DBConfigNodes",
@@ -214,7 +210,7 @@
       "metaCollection": "META",
       "indexCollection": "INDEX",
       "membersCollection": "DATA",
-      "dbUrl": "mongodb://mongodb:27017/nodes"
+      "dbUrl": "mongodb://localhost:27017/mumotest"
     },
     {
       "@id": "urn:solid-server:default:relative-path",
