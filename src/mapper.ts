@@ -289,9 +289,9 @@ async function do_transform(
         const channel = await instance.get_sensor(
           g.channelIndex,
           g.deviceIndex + 1,
-          mg.timestamp,
+          mg.timestamp * 1000,
         );
-        dataPoints.push({ channel, time: mg.timestamp, value: g.value });
+        dataPoints.push({ channel, time: mg.timestamp * 1000, value: g.value });
       }
     }
   } else {

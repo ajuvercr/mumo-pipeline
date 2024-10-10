@@ -173,8 +173,22 @@ ex:Measurement a sh:NodeShape;
   ] [
     a tree:TimeBucketFragmentation;
     tree:timestampPath <http://def.isotc211.org/iso19156/2011/Observation#OM_Observation.resultTime>;
-    tree:maxSize 1000;
-    tree:level ( "year" "month" "day-of-month" "hour" "minute" );
+    tree:level ( [
+      tree:range "year";
+      tree:maxSize 0;
+    ] [
+      tree:range "month";
+      tree:maxSize 0;
+    ] [
+      tree:range "day-of-month";
+      tree:maxSize 1000;
+    ] [
+      tree:range "hour";
+      tree:maxSize 1000;
+    ] [
+      tree:range "minute";
+      tree:maxSize 10000;
+    ] );
   ] );
   js:savePath <./buckets_save_1.json>;
   js:outputStreamId <http://data.mumo.be/streams/buckets/1>.
@@ -221,8 +235,22 @@ ex:Measurement a sh:NodeShape;
   ] [
     a tree:TimeBucketFragmentation;
     tree:timestampPath <http://def.isotc211.org/iso19156/2011/Observation#OM_Observation.resultTime>;
-    tree:maxSize 1000;
-    tree:level ( "year" "month" "day-of-month" "hour" "minute" );
+    tree:level ( [
+      tree:range "year";
+      tree:maxSize 0;
+    ] [
+      tree:range "month";
+      tree:maxSize 0;
+    ] [
+      tree:range "day-of-month";
+      tree:maxSize 1000;
+    ] [
+      tree:range "hour";
+      tree:maxSize 1000;
+    ] [
+      tree:range "minute";
+      tree:maxSize 10000;
+    ] );
   ] );
   js:savePath <./buckets_save_2.json>;
   js:outputStreamId <http://data.mumo.be/streams/buckets/2>.

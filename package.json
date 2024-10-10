@@ -22,7 +22,7 @@
   "license": "ISC",
   "dependencies": {
     "@rdfc/js-runner": "^0.2.2",
-    "@rdfc/sds-processors-ts": "^1.0.0-alpha.4",
+    "@rdfc/sds-processors-ts": "^1.0.0-alpha.5",
     "@rdfc/sds-storage-writer-ts": "^1.0.0-alpha.3",
     "@rdfjs/types": "^1.1.0",
     "@treecg/types": "^0.4.6",
