@@ -42,35 +42,42 @@ services:
       echo -e 'Successfully created the following topics:'
       ./kafka-topics.sh  --bootstrap-server kafka:19092 --list
       "
-  redis-ldes:
-    image: redis/redis-stack-server:latest
-    # Don't attach a volume, as we do not want the data to persist between benchmark runs
-    #volumes:
-    #  - ./redis-data:/data
-    #ports:
-    #  - 6379:6379
-    restart: always
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-    ports:
-      - '6377:6379'
 
-  redis-nodes:
-    image: redis/redis-stack-server:latest
-    # Don't attach a volume, as we do not want the data to persist between benchmark runs
-    #volumes:
-    #  - ./redis-data:/data
-    #ports:
-    #  - 6379:6379
-    restart: always
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+  # redis-ldes:
+  #   image: redis/redis-stack-server:latest
+  #   # Don't attach a volume, as we do not want the data to persist between benchmark runs
+  #   #volumes:
+  #   #  - ./redis-data:/data
+  #   #ports:
+  #   #  - 6379:6379
+  #   restart: always
+  #   logging:
+  #     driver: "json-file"
+  #     options:
+  #       max-size: "10m"
+  #       max-file: "3"
+  #   ports:
+  #     - '6377:6379'
+  #
+  # redis-nodes:
+  #   image: redis/redis-stack-server:latest
+  #   # Don't attach a volume, as we do not want the data to persist between benchmark runs
+  #   #volumes:
+  #   #  - ./redis-data:/data
+  #   #ports:
+  #   #  - 6379:6379
+  #   restart: always
+  #   logging:
+  #     driver: "json-file"
+  #     options:
+  #       max-size: "10m"
+  #       max-file: "3"
+  #   ports:
+  #     - '6378:6379'
+
+  mongo:
+    container_name: mongo
+    image: mongo:latest
     ports:
-      - '6378:6379'
+      - 27017:27017
 
