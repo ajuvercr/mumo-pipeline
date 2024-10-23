@@ -96,15 +96,11 @@ export async function createItem(
   url: string,
   fetch_f: typeof fetch,
 ): Promise<string> {
-  console.log("Payload");
-  console.log(payload);
   const resp = await fetch_f(url, {
     body: payload,
     method: "POST",
     headers: { "Content-Type": "application/ld+json" },
   });
-  console.log("Resp", resp.status, resp.statusText, resp.headers);
   const json = <{ [label: string]: any }>await resp.json();
-  console.log("Got me some id", json["@id"]);
   return json["@id"];
 }

@@ -1,6 +1,6 @@
 import { readFileSync, writeFileSync } from "fs";
 import fetch, { Headers } from "node-fetch";
-import type { Writer } from "@rdfc/js-runner";
+import { profiler, type Writer } from "@rdfc/js-runner";
 
 interface Link {
   target: string;
@@ -23,7 +23,7 @@ function extract_links(headers: Headers): Link[] {
 
     if (!val_key || !val_val) continue;
     if (val_key.trim().toLowerCase() !== "rel") continue;
-    const target = val_val.trim().slice(1, -1);
+    const target = val_val.trim().replaceAll('"', "");
 
     out.push({ target, url });
   }
@@ -90,17 +90,20 @@ async function start(
     console.log("Starting for real");
     while (url) {
       console.log("fetching url", url);
+      let ret = profiler.start("fetcher");
       const resp = await fetch(url);
       let links = extract_links(resp.headers);
 
       const text = await resp.text();
       // console.log("got text!", text.length);
+      profiler.stop(ret);
 
       await writer.push(text);
-      // await new Promise((res) => setTimeout(res, 1000));
-      save(url);
 
+      ret = profiler.start("fetcher");
+      save(url);
       url = await findNextUrl(url, interval_ms, stop, links);
+      profiler.stop(ret);
     }
 
     await writer.end();

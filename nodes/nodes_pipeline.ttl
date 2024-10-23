@@ -84,6 +84,7 @@
 @prefix foaf: <http://xmlns.com/foaf/0.1/>.
 @prefix ex: <http://example.org/>.
 @prefix cidoc: <http://www.cidoc-crm.org/cidoc-crm/>.
+@prefix dcterms: <http://purl.org/dc/terms/>.
 
 # http://www.cidoc-crm.org/cidoc-crm/P53_has_former_or_current_location
 ex:SensorShape a sh:NodeShape;
@@ -93,6 +94,9 @@ ex:SensorShape a sh:NodeShape;
   ], [
     sh:path <http://purl.org/dc/terms/hasPart>;
     sh:node [ sh:property [ sh:path rdf:type ] ];
+  ], [
+    sh:path (cidoc:P55_has_current_location [ sh:zeroOrMorePath dcterms:isPartOf ] );
+    sh:node [ ];
   ].
 """.
 
@@ -151,29 +155,21 @@ ex:SensorShape a sh:NodeShape;
 [ ] a js:Ingest;
   js:dataInput <raw/buckets-1/reader>;
   js:metadataInput <meta/buckets-1/reader>;
-  js:database [
-    js:data "DATA";
-    js:index "INDEX";
-    js:metadata "META";
-    js:url [
-      a rdfl:EnvVariable;
-      rdfl:envDefault "mongodb://127.0.0.1:27017/nodes";
-      rdfl:envKey "MONGO";
-    ];
-  ].
+  js:database <DataBaseConfig>.
 
 [ ] a js:Ingest;
   js:dataInput <raw/buckets-2/reader>;
   js:metadataInput <meta/buckets-2/reader>;
-  js:database [
-    js:data "DATA";
-    js:index "INDEX";
-    js:metadata "META";
-    js:url [
-      a rdfl:EnvVariable;
-      rdfl:envDefault "mongodb://127.0.0.1:27017/nodes";
-      rdfl:envKey "MONGO";
-    ];
+  js:database <DataBaseConfig>.
+
+<DataBaseConfig> js:data "DATA";
+  js:index "INDEX";
+  js:metadata "META";
+  js:url [
+    a rdfl:EnvVariable;
+    # rdfl:envDefault "redis://127.0.0.1:6379/mumotest";
+    rdfl:envDefault "redis://127.0.0.1:6378/";
+    rdfl:envKey "REDIS";
   ].
 
 # js:url "mongodb://mongodb:27017/mumoNodes";

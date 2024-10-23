@@ -23,7 +23,6 @@ export async function createNodeForNode(
 
   const sensorDevices: { [label: number]: any } = {};
   if (!foundNode) {
-    console.log("No node found");
     const sensors: string[] = [];
 
     for (const group of model) {
@@ -61,8 +60,6 @@ export async function createNodeForNode(
 
             sensors.push(sensor);
           }
-
-          console.log("Built", id, sensors);
         }
       }
     }
@@ -78,7 +75,6 @@ export function getShapes(): { store: RdfStore; shapes: Shapes } {
   shapeTriples.forEach((x) => shapeStore.addQuad(x));
 
   const shapes = get_shapes();
-  console.log(shapes);
   return { store: shapeStore, shapes };
 }
 

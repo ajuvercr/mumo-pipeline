@@ -18,6 +18,7 @@
 <> owl:imports <../node_modules/@rdfc/js-runner/ontology.ttl>.
 <> owl:imports <../node_modules/@rdfc/js-runner/channels/file.ttl>.
 <> owl:imports <../node_modules/@rdfc/js-runner/channels/http.ttl>.
+<> owl:imports <../node_modules/@rdfc/js-runner/channels/kafka.ttl>.
 <> owl:imports <../proc/fetch.ttl>.
 <> owl:imports <../proc/mumo_mapper.ttl>.
 <> owl:imports <../node_modules/@rdfc/sds-processors-ts/configs/bucketizer.ttl>.
@@ -25,11 +26,23 @@
 <> owl:imports <../node_modules/@rdfc/sds-processors-ts/configs/sdsify.ttl>.
 <> owl:imports <../node_modules/@rdfc/sds-storage-writer-ts/processor.ttl>.
 <> owl:imports <../shape.ttl>.
-<json/writer> a js:JsWriterChannel.
-<json/reader> a js:JsReaderChannel.
-[ ] a :Channel, js:JsChannel;
-  :reader <json/reader>;
-  :writer <json/writer>.
+# <json/writer> a js:JsWriterChannel.
+# <json/reader> a js:JsReaderChannel.
+# [ ] a :Channel, js:JsChannel;
+#   :reader <json/reader>;
+#   :writer <json/writer>.
+<json/reader> a :KafkaReaderChannel;
+  :kafkaTopic [
+    :topicName "mumo";
+    :topicFromBeginning true;
+  ];
+  :kafkaConsumer [ :groupId "reading-group" ];
+  :kafkaBroker [ :brokerHost [
+    a rdfl:EnvVariable;
+    # rdfl:envDefault "redis://127.0.0.1:6379/mumotest";
+    rdfl:envDefault "localhost:9092";
+    rdfl:envKey "KAFKA";
+  ] ].
 
 <ttl/writer> a js:JsWriterChannel.
 <ttl/reader> a js:JsReaderChannel.
@@ -79,12 +92,12 @@
   :reader <shaped-2/reader>;
   :writer <shaped-2/writer>.
 
-[ ] a js:MumoFetch;
-  js:startUrl "https://mumo.ilabt.imec.be/ingest/?key=mumo-is-cool&index=0";
-  js:savePath <save>;
-  js:intervalMs 1000;
-  js:dataOutput <json/writer>.
-
+# [ ] a js:MumoFetch;
+#   js:startUrl "http://localhost:3000/?key=mumo-is-cool&index=0";
+#   js:savePath <save>;
+#   js:intervalMs 1000;
+#   js:dataOutput <json/writer>.
+#
 [ ] a js:MumoMapper;
   js:dataInput <json/reader>;
   js:dataOutput <ttl/writer>.
@@ -201,18 +214,10 @@ ex:Measurement a sh:NodeShape;
 [ ] a js:Ingest;
   js:dataInput <shaped-1/reader>;
   js:metadataInput <meta/buckets-1/reader>;
-  js:database [
-    js:data "DATA";
-    js:index "INDEX";
-    js:metadata "META";
-    js:url [
-      a rdfl:EnvVariable;
-      rdfl:envDefault "mongodb://127.0.0.1:27017/mumotest";
-      rdfl:envKey "MONGO";
-    ];
-  ].
+  js:database <DataBaseConfig>.
 
 [ ] a js:Bucketize;
+  js:prefix "root/";
   js:channels [
     js:dataInput <sds-raw/reader>;
     js:metadataInput <metadata/in>;
@@ -263,15 +268,16 @@ ex:Measurement a sh:NodeShape;
 [ ] a js:Ingest;
   js:dataInput <shaped-2/reader>;
   js:metadataInput <meta/buckets-2/reader>;
-  js:database [
-    js:data "DATA";
-    js:index "INDEX";
-    js:metadata "META";
-    js:url [
-      a rdfl:EnvVariable;
-      rdfl:envDefault "mongodb://127.0.0.1:27017/mumotest";
-      rdfl:envKey "MONGO";
-    ];
+  js:database <DataBaseConfig>.
+
+<DataBaseConfig> js:data "DATA";
+  js:index "INDEX";
+  js:metadata "META";
+  js:url [
+    a rdfl:EnvVariable;
+    # rdfl:envDefault "redis://127.0.0.1:6379/mumotest";
+    rdfl:envDefault "redis://127.0.0.1:6377/";
+    rdfl:envKey "REDIS";
   ].
 
 <NodeShape> a sh:NodeShape;
@@ -307,4 +313,8 @@ ex:Measurement a sh:NodeShape;
         ];
       ];
     ].
+
+<> a js:FileProfilerShape;
+  js:path "/tmp/profile.csv";
+  js:intervalMs 2000.
 

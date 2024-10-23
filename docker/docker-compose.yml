@@ -1,38 +1,43 @@
 version: '3.8'
+include:
+  - ../docker-servers.yaml
 services:
-  mongodb:
-    container_name: mongodb
-    image: mongo:latest
-    networks:
-    - ldes
+  # mongo:
+  #   container_name: mongo
+  #   image: mongo:latest
+  #   ports:
+  #     - 27017:27017
 
   data_pipeline:
     environment:
-      MONGO: "mongodb://mongodb:27017/data"
+      REDIS: "redis://redis-ldes:6379/"
+      # REDIS: "mongodb://mongo:27017/data"
+      KAFKA: "kafka:19092"
     build: 
       context: ..
       dockerfile: ./docker/pipeline.yml
-    volumes:
-      - ../data:/workspace/data
+    # volumes:
+    #   - ../data:/workspace/data
     command: /workspace/data/data_pipeline.ttl
-    networks:
-    - ldes
     depends_on:
-    - mongodb
+      # - redis-nodes
+      - init-kafka
+      - redis-ldes
+      - kafka 
 
   nodes_pipeline:
     environment:
-      MONGO: "mongodb://mongodb:27017/nodes"
+      REDIS: "redis://redis-nodes:6379/"
+      # REDIS: "mongodb://mongo:27017/nodes"
     build: 
       context: ..
       dockerfile: ./docker/pipeline.yml
-    volumes:
-      - ../nodes:/workspace/nodes
+    # volumes:
+    #   - ../nodes:/workspace/nodes
     command: /workspace/nodes/nodes_pipeline.ttl
-    networks:
-    - ldes
     depends_on:
-    - mongodb
+      - redis-nodes
+      # - mongo
 
   ldesserver:
     build:
@@ -40,14 +45,12 @@ services:
       dockerfile: ./Dockerfile
     volumes:
       - ./ldes/data:/ldes-solid-server/data
-    command: -f ./data -b http://localhost:3000
-    networks:
-      - ldes
+      - ./ldes/config-ldes.json:/ldes-solid-server/config-ldes.json
+    command: -f ./data -b http://localhost:3000 -l debug
     depends_on:
-      - mongodb
+      # - mongo
+      - redis-nodes
+      - redis-ldes
     ports:
-      - 3000:3000
-    restart: always
-
-networks:
-    ldes:
+      - 2999:3000
+    # restart: always

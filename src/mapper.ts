@@ -34,7 +34,6 @@ export async function setup_nodes(
     items.filter((x) => x.factory.template.id === NodeTemplateId)
   );
 
-  console.log("Got nodes, lets get some quads");
   for (const node of omeka_nodes) {
     const euid = node.item["modsrdf:identifier"];
     if (nodes[euid]) {
@@ -321,11 +320,9 @@ async function do_transform(
 
     const writer = new N3.Writer();
     writer.addQuads(obj);
-    console.log("Quads", obj.length, dp.time, new Date(dp.time).toISOString());
     const output: string = await new Promise((resolve, reject) => {
       writer.end((err, res) => {
         if (err) reject(err);
-        console.log(res);
         resolve(res);
       });
     });
@@ -347,7 +344,14 @@ export async function transform(
   await setup_nodes(nodes, omeka);
   setInterval(() => setup_nodes(nodes, omeka), 60000);
 
+  let count = 0;
+  setInterval(() => {
+    console.log("Last second ingested", count, "json objects");
+    count = 0;
+  }, 1000);
+
   reader.data(async (input) => {
+    count += 1;
     try {
       const objects = await do_transform(input, nodes, omeka);
       for (let object of objects) {
